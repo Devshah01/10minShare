@@ -8,7 +8,7 @@ export function Footer() {
         
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-brand-500" />
-          <span>10minshare — Fast, zero-trace temporary image sharing.</span>
+          <span>10minshare — Fast, zero-trace image sharing.</span>
         </div>
 
         <div className="flex items-center gap-4">
