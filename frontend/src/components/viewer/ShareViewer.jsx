@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver';
 import { api } from '../../services/api';
 import { CountdownTimer } from '../common/CountdownTimer';
 import { ImageGallery } from './ImageGallery';
+import { ImageViewer3D } from './ImageViewer3D';
 import { LightboxModal } from './LightboxModal';
 import { ExpiredState } from './ExpiredState';
 
@@ -147,8 +148,8 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
 
       </div>
 
-      {/* Gallery Grid */}
-      <ImageGallery files={shareData.files} onSelectImage={setSelectedFile} />
+      {/* 3D Spinning Wheel Photo Viewer */}
+      <ImageViewer3D files={shareData.files} onSelectImage={setSelectedFile} />
 
       {/* Lightbox Modal */}
       {selectedFile && (
