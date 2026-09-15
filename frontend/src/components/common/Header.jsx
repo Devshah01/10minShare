@@ -4,17 +4,17 @@ import { LogoIcon } from './LogoIcon';
 
 export function Header({ onLogoClick }) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b-4 border-zinc-900 dark:border-white bg-white/80 dark:bg-black/80 backdrop-blur-md">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b-[2.5px] border-zinc-900 dark:border-zinc-400 bg-white/80 dark:bg-black/80 backdrop-blur-md">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         
         {/* Brand Logo - Pill shaped container with icon in front of text */}
         <button 
           onClick={onLogoClick}
-          className="px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-2.5 group focus:outline-none hover:bg-zinc-200/70 dark:hover:bg-zinc-800/70 transition-all"
+          className="px-4 py-2 rounded-full bg-zinc-900 dark:bg-white border border-zinc-800 dark:border-zinc-200 shadow-sm flex items-center gap-2.5 group focus:outline-none hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all"
         >
-          <LogoIcon className="w-5 h-5 text-zinc-900 dark:text-white transition-transform group-hover:scale-105" />
-          <span className="font-display font-extrabold text-base tracking-tight text-zinc-900 dark:text-white">
-            10min<span className="font-light text-zinc-500 dark:text-zinc-400">share</span>
+          <LogoIcon className="w-6 h-6 shrink-0 text-white dark:text-zinc-900 transition-transform group-hover:scale-105" />
+          <span className="font-display font-extrabold text-base tracking-tight text-white dark:text-zinc-900">
+            10min<span className="font-light text-zinc-400 dark:text-zinc-500">share</span>
           </span>
         </button>
 

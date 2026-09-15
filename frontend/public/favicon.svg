@@ -1,4 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="10"></circle>
-  <polyline points="12 6 12 12 16 14"></polyline>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="24" fill="#09090b" />
+  <g fill="#ffffff">
+    <!-- Central Knob -->
+    <circle cx="50" cy="50" r="11" />
+
+    <!-- Needle pointing up-right -->
+    <path d="M 45 46 L 68 24 C 70 22, 72 25, 70 27 L 53 53 Z" />
+
+    <!-- Arc Dots -->
+    <circle cx="66" cy="12" r="3.5" />
+    <circle cx="47" cy="12" r="5" />
+    <circle cx="29" cy="21" r="6" />
+    <circle cx="17" cy="37" r="6.5" />
+    <circle cx="16" cy="61" r="7" />
+    <circle cx="29" cy="78" r="8" />
+    <circle cx="51" cy="85" r="9" />
+    <circle cx="76" cy="73" r="11.5" />
+  </g>
 </svg>

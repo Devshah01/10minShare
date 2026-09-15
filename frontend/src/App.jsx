@@ -102,7 +102,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-200/80 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
       {/* Header */}
       <Header onLogoClick={handleNewShare} />
 
@@ -152,7 +152,7 @@ export default function App() {
             </div>
 
             {/* Upload Area & Preview Grid */}
-            <div className="rounded-2xl p-6 sm:p-8 space-y-6 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <div className="max-w-[280px] sm:max-w-[320px] mx-auto w-full rounded-[2.25rem] p-3.5 sm:p-4 space-y-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 shadow-xl shadow-zinc-300/70 dark:shadow-zinc-900/90">
               <ImageDropzone
                 onFilesSelected={handleFilesSelected}
                 currentCount={selectedFiles.length}
@@ -170,7 +170,7 @@ export default function App() {
 
             {/* Feature Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 shadow-md hover:shadow-lg shadow-zinc-200/70 dark:shadow-zinc-900/70 transition-all duration-200 text-left space-y-1">
                 <div className="flex items-center gap-2 font-display font-bold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
                   <ShieldCheck className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
                   <span>Max 10 Images</span>
@@ -180,7 +180,7 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 shadow-md hover:shadow-lg shadow-zinc-200/70 dark:shadow-zinc-900/70 transition-all duration-200 text-left space-y-1">
                 <div className="flex items-center gap-2 font-display font-bold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
                   <Zap className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
                   <span>Link & QR Code</span>
@@ -190,7 +190,7 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 shadow-md hover:shadow-lg shadow-zinc-200/70 dark:shadow-zinc-900/70 transition-all duration-200 text-left space-y-1">
                 <div className="flex items-center gap-2 font-display font-bold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
                   <Lock className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
                   <span>Auto-Delete in 10m</span>

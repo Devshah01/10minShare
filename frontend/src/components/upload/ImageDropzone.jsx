@@ -35,10 +35,10 @@ export function ImageDropzone({ onFilesSelected, currentCount = 0, maxCount = 10
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onClick={() => !isFull && fileInputRef.current?.click()}
-        className={`relative group cursor-pointer overflow-hidden rounded-2xl w-full max-w-[260px] sm:max-w-[300px] aspect-square p-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all duration-200 ${
+        className={`relative group cursor-pointer overflow-hidden rounded-3xl w-full aspect-square p-4 sm:p-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all duration-200 ${
           isFull
             ? 'border-zinc-300 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/40 cursor-not-allowed'
-            : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-100 bg-zinc-50/50 dark:bg-zinc-950/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50'
+            : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-100 bg-zinc-200/50 dark:bg-zinc-950/50 hover:bg-zinc-300/40 dark:hover:bg-zinc-900/50'
         }`}
       >
         <input
