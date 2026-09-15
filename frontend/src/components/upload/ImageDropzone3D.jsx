@@ -123,8 +123,8 @@ export function ImageDropzone3D({
               <p className="font-display font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
                 Add Image
               </p>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-                {files.length} / {maxCount} uploaded
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-[180px] mx-auto leading-tight">
+                JPG, PNG, WEBP, GIF, SVG (Up to 50MB)
               </p>
             </div>
           </div>

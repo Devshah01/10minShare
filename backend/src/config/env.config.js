@@ -14,6 +14,6 @@ export const config = {
     publicDomain: process.env.R2_PUBLIC_DOMAIN || '',
   },
   maxImagesPerShare: 10,
-  maxFileSizeMB: 10,
+  maxFileSizeMB: process.env.MAX_FILE_SIZE_MB ? parseInt(process.env.MAX_FILE_SIZE_MB) : 50,
   shareDurationMinutes: 10,
 };

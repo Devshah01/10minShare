@@ -61,7 +61,7 @@ export function ImageDropzone({ onFilesSelected, currentCount = 0, maxCount = 10
               {isFull ? "Maximum 10 Images Reached" : "Drop images, or browse"}
             </h3>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-[200px] mx-auto leading-normal">
-              JPG, PNG, WEBP, GIF, SVG (Up to 10MB)
+              JPG, PNG, WEBP, GIF, SVG (Up to 50MB)
             </p>
           </div>
 
