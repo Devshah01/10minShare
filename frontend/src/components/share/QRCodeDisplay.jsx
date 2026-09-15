@@ -33,13 +33,13 @@ export function QRCodeDisplay({ shareUrl }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-inner">
-      <div ref={qrRef} className="p-3 bg-white rounded-xl shadow-md border border-slate-100">
+    <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-400 shadow-sm">
+      <div ref={qrRef} className="p-3 bg-white rounded-xl shadow-md border border-zinc-200">
         <QRCodeSVG
           value={shareUrl}
           size={160}
           bgColor="#ffffff"
-          fgColor="#070a0f"
+          fgColor="#000000"
           level="H"
           includeMargin={false}
         />
@@ -48,9 +48,9 @@ export function QRCodeDisplay({ shareUrl }) {
       <button
         onClick={downloadQR}
         type="button"
-        className="text-xs text-slate-500 dark:text-slate-400 hover:text-brand-500 flex items-center gap-1 font-medium transition-colors"
+        className="text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1 font-bold transition-colors"
       >
-        <Download className="w-3.5 h-3.5" />
+        <Download className="w-3.5 h-3.5 stroke-[2.5]" />
         <span>Save QR Image</span>
       </button>
     </div>

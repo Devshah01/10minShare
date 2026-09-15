@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/common/Header';
-import { ImageDropzone } from './components/upload/ImageDropzone';
-import { ImagePreviewGrid } from './components/upload/ImagePreviewGrid';
+import { ImageDropzone3D } from './components/upload/ImageDropzone3D';
 import { UploadProgress } from './components/upload/UploadProgress';
 import { ShareSuccessModal } from './components/share/ShareSuccessModal';
 import { ShareViewer } from './components/viewer/ShareViewer';
@@ -107,7 +106,7 @@ export default function App() {
       <Header onLogoClick={handleNewShare} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col justify-start">
         
         {/* Error Alert Toast */}
         {errorMessage && (
@@ -151,22 +150,16 @@ export default function App() {
               </p>
             </div>
 
-            {/* Upload Area & Preview Grid */}
-            <div className="max-w-[280px] sm:max-w-[320px] mx-auto w-full rounded-[2.25rem] p-3.5 sm:p-4 space-y-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 shadow-xl shadow-zinc-300/70 dark:shadow-zinc-900/90">
-              <ImageDropzone
-                onFilesSelected={handleFilesSelected}
-                currentCount={selectedFiles.length}
-                maxCount={10}
-              />
-
-              <ImagePreviewGrid
-                files={selectedFiles}
-                onRemoveFile={handleRemoveFile}
-                onClearAll={handleClearAll}
-                onSubmit={handleSubmitUpload}
-                isUploading={isUploading}
-              />
-            </div>
+            {/* 3D Stacked Card Dropzone & Controls */}
+            <ImageDropzone3D
+              files={selectedFiles}
+              onFilesSelected={handleFilesSelected}
+              onRemoveFile={handleRemoveFile}
+              onClearAll={handleClearAll}
+              onSubmit={handleSubmitUpload}
+              isUploading={isUploading}
+              maxCount={10}
+            />
 
             {/* Feature Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">

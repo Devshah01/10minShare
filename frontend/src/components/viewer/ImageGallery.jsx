@@ -41,12 +41,12 @@ export function ImageGallery({ files, onSelectImage }) {
         return (
           <div
             key={file.id}
-            className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-2xl transition-all duration-300 border border-slate-200/80 dark:border-slate-800/80 flex flex-col"
+            className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
           >
             {/* Image Thumbnail Container */}
             <div
               onClick={() => onSelectImage({ ...file, downloadUrl: secureImgUrl })}
-              className="relative aspect-video w-full overflow-hidden bg-slate-900 cursor-pointer"
+              className="relative aspect-video w-full overflow-hidden bg-zinc-900 cursor-pointer"
             >
               <img
                 src={secureImgUrl}
@@ -58,18 +58,18 @@ export function ImageGallery({ files, onSelectImage }) {
               {/* Hover overlay with zoom icon */}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <span className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white">
-                  <Eye className="w-6 h-6" />
+                  <Eye className="w-6 h-6 stroke-[2.5]" />
                 </span>
               </div>
             </div>
 
             {/* Details & Individual Download CTA */}
-            <div className="p-3.5 flex items-center justify-between gap-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+            <div className="p-4 flex items-center justify-between gap-2 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-900">
               <div className="min-w-0 text-left">
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">
                   {file.name}
                 </p>
-                <p className="text-[10px] text-slate-400 font-mono">
+                <p className="text-[10px] text-zinc-400 font-mono">
                   {formatFileSize(file.size)}
                 </p>
               </div>
@@ -77,10 +77,10 @@ export function ImageGallery({ files, onSelectImage }) {
               <button
                 onClick={(e) => handleSingleDownload(e, file)}
                 type="button"
-                className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500 text-brand-600 dark:text-brand-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                className="px-4 py-1.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-extrabold flex items-center gap-1.5 hover:bg-zinc-800 dark:hover:bg-zinc-100 shadow-sm active:scale-95 transition-all shrink-0 cursor-pointer"
                 title="Download image to local device"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Download</span>
               </button>
             </div>

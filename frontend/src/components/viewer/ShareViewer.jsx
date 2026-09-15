@@ -63,9 +63,11 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="w-14 h-14 rounded-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-lg flex items-center justify-center">
+          <Loader2 className="w-7 h-7 text-zinc-900 dark:text-white stroke-[2.5] animate-spin" />
+        </div>
+        <p className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300 font-sans tracking-tight">
           Loading 10-minute share session...
         </p>
       </div>
@@ -94,29 +96,29 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
     <div className="w-full max-w-5xl mx-auto space-y-6 animate-fade-in">
       
       {/* Recipient Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 glass-card rounded-3xl border border-brand-500/20">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-white dark:bg-zinc-950 rounded-[2.25rem] border border-zinc-200 dark:border-zinc-800 shadow-xl">
         
         <div className="flex items-center gap-3 text-left">
           <button
             onClick={onBackToUpload}
             type="button"
-            className="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+            className="p-2.5 rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white transition-colors"
             title="Upload your own images"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
           </button>
 
           <div>
-            <h1 className="font-display font-extrabold text-xl text-slate-900 dark:text-white flex items-center gap-2">
-              Shared Photo Collection <Sparkles className="w-4 h-4 text-brand-500" />
+            <h1 className="font-display font-extrabold text-xl text-zinc-900 dark:text-white flex items-center gap-2 tracking-tight">
+              Shared Photo Collection <Sparkles className="w-4 h-4 text-zinc-900 dark:text-white" />
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
               {shareData.files.length} {shareData.files.length === 1 ? 'image shared' : 'images shared'} • Link auto-destructs soon
             </p>
           </div>
         </div>
 
-        {/* Live Active Countdown Timer */}
+        {/* Live Active Countdown Timer & Action */}
         <div className="flex items-center gap-3">
           <CountdownTimer
             initialSeconds={shareData.remainingSeconds}
@@ -127,16 +129,16 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
             onClick={handleDownloadAllZip}
             disabled={isZipping}
             type="button"
-            className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-600 hover:to-emerald-700 text-white font-display font-bold text-xs shadow-lg shadow-brand-500/20 flex items-center gap-2 transition-all disabled:opacity-50"
+            className="px-5 py-2.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-display font-extrabold text-xs shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 flex items-center gap-2 transition-all disabled:opacity-50 active:scale-95"
           >
             {isZipping ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin stroke-[2.5]" />
                 <span>Creating ZIP...</span>
               </>
             ) : (
               <>
-                <DownloadCloud className="w-4 h-4" />
+                <DownloadCloud className="w-4 h-4 stroke-[2.5]" />
                 <span>Download All (.zip)</span>
               </>
             )}
