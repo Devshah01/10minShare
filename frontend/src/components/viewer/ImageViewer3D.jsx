@@ -292,8 +292,6 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
     }
   };
 
-  const activeFile = files[activeIndex] || files[0];
-
   return (
     <div className="w-full max-w-full overflow-x-clip flex flex-col items-center gap-4 sm:gap-6 py-2 sm:py-4">
       
@@ -365,7 +363,7 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
       {/* Navigation Controls & Active Image Actions */}
       <div className="w-full max-w-md space-y-3 sm:space-y-4 px-2">
         {/* Navigation Bar */}
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-center px-2">
           <div className="flex items-center gap-2">
             <button
               onClick={() => animateToCard(activeIndex - 1)}
@@ -375,7 +373,7 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             </button>
 
-            <span className="text-xs font-bold font-mono text-zinc-900 dark:text-white">
+            <span className="text-xs font-bold font-mono text-zinc-900 dark:text-white px-2">
               {activeIndex + 1} of {totalCards}
             </span>
 
@@ -387,16 +385,6 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
-
-          {activeFile && (
-            <button
-              onClick={(e) => handleSingleDownload(e, activeFile)}
-              className="text-xs font-extrabold text-zinc-900 dark:text-white hover:underline flex items-center gap-1 active:scale-95"
-            >
-              <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-              Download Active
-            </button>
-          )}
         </div>
 
         {/* Thumbnail Strip */}
