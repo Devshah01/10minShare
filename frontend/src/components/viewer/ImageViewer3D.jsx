@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Download, ChevronLeft, ChevronRight, Image as ImageIcon, Eye, HardDrive } from 'lucide-react';
+import { getSecureUrl, downloadSingleFile } from '../../utils/downloadHelper';
 
 export function ImageViewer3D({ files = [], onSelectImage }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -31,30 +32,12 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const getSecureUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http://') && !url.includes('localhost')) {
-      return url.replace('http://', 'https://');
-    }
-    return url;
-  };
-
   const handleSingleDownload = (e, file) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    const targetUrl = getSecureUrl(file.downloadUrl);
-    const downloadUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}download=true`;
-    
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.download = file.name || 'image.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadSingleFile(file);
   };
 
   // Hardware-accelerated 3D transforms directly applied to DOM nodes

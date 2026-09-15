@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Download } from 'lucide-react';
+import { getSecureUrl, downloadSingleFile } from '../../utils/downloadHelper';
 
 export function LightboxModal({ file, onClose }) {
   if (!file) return null;
@@ -12,26 +13,8 @@ export function LightboxModal({ file, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const getSecureUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http://') && !url.includes('localhost')) {
-      return url.replace('http://', 'https://');
-    }
-    return url;
-  };
-
   const handleDownload = () => {
-    const targetUrl = getSecureUrl(file.downloadUrl);
-    const downloadUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}download=true`;
-    
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.download = file.name || 'image.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadSingleFile(file);
   };
 
   const secureImgUrl = getSecureUrl(file.downloadUrl);

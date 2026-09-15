@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download, Eye } from 'lucide-react';
+import { getSecureUrl, downloadSingleFile } from '../../utils/downloadHelper';
 
 export function ImageGallery({ files, onSelectImage }) {
   const formatFileSize = (bytes) => {
@@ -10,28 +11,12 @@ export function ImageGallery({ files, onSelectImage }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const getSecureUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http://') && !url.includes('localhost')) {
-      return url.replace('http://', 'https://');
-    }
-    return url;
-  };
-
   const handleSingleDownload = (e, file) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const targetUrl = getSecureUrl(file.downloadUrl);
-    const downloadUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}download=true`;
-    
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.download = file.name || 'image.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    downloadSingleFile(file);
   };
 
   return (
