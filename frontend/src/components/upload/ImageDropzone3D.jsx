@@ -373,10 +373,18 @@ export function ImageDropzone3D({
       );
     }
 
-    // Image Card
+    // Image Card - Takes 100% full area edge-to-edge
     return (
-      <div className="w-full h-full flex flex-col justify-between p-3 sm:p-4 relative select-none">
-        {/* Delete Badge */}
+      <div className="w-full h-full relative select-none overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]">
+        {/* Full area image preview */}
+        <img
+          src={card.url}
+          alt={card.name}
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+
+        {/* Delete Badge Overlay */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -385,26 +393,16 @@ export function ImageDropzone3D({
               animateToCard(activeIndex - 1);
             }
           }}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center transition-all shadow-md active:scale-95 hover:scale-110"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-lg active:scale-95 hover:scale-105"
           title="Remove image"
         >
-          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+          <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
-        {/* Image Preview Container */}
-        <div className="flex-1 w-full overflow-hidden rounded-2xl sm:rounded-3xl relative bg-zinc-100 dark:bg-zinc-800">
-          <img
-            src={card.url}
-            alt={card.name}
-            draggable={false}
-            className="w-full h-full object-cover rounded-2xl sm:rounded-3xl shadow-sm pointer-events-none"
-          />
-        </div>
-
-        {/* Bottom Info Badge Pill */}
-        <div className="flex items-center justify-start mt-1.5 sm:mt-2">
-          <div className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-[11px] sm:text-xs font-extrabold text-zinc-900 dark:text-white shadow-md truncate max-w-[170px] sm:max-w-[200px] flex items-center gap-1.5">
-            <ImageIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-zinc-500" />
+        {/* Bottom Info Badge Overlay */}
+        <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-30 max-w-[85%] flex items-center justify-start">
+          <div className="px-3.5 py-1.5 rounded-full bg-black/60 dark:bg-black/70 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-bold text-white shadow-lg truncate flex items-center gap-1.5">
+            <ImageIcon className="w-3.5 h-3.5 shrink-0 text-white/80" />
             <span className="truncate">{card.name}</span>
           </div>
         </div>
