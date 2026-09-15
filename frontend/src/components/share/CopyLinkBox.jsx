@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, ExternalLink } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 
 export function CopyLinkBox({ shareUrl }) {
   const [copied, setCopied] = useState(false);
@@ -12,35 +12,35 @@ export function CopyLinkBox({ shareUrl }) {
 
   return (
     <div className="w-full space-y-2">
-      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-left">
+      <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 text-left">
         Direct Shareable Link
       </label>
 
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl glass-input">
+      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
         <input
           type="text"
           readOnly
           value={shareUrl}
-          className="w-full bg-transparent px-3 text-xs sm:text-sm font-mono text-slate-800 dark:text-slate-200 outline-none truncate"
+          className="w-full bg-transparent px-3 text-xs sm:text-sm font-mono text-zinc-900 dark:text-zinc-100 outline-none truncate"
         />
 
         <button
           onClick={handleCopy}
           type="button"
-          className={`px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all duration-200 shadow-md ${
+          className={`px-3.5 py-2 rounded-lg font-display font-bold text-xs flex items-center gap-1.5 transition-all duration-200 ${
             copied
-              ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-              : 'bg-brand-500 hover:bg-brand-600 text-white shadow-brand-500/20'
+              ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+              : 'bg-zinc-800 hover:bg-black dark:bg-zinc-200 dark:hover:bg-white text-white dark:text-zinc-900'
           }`}
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4" />
+              <Check className="w-3.5 h-3.5" />
               <span>Copied!</span>
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4" />
+              <Copy className="w-3.5 h-3.5" />
               <span>Copy</span>
             </>
           )}

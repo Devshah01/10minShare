@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, Plus, Info } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon } from 'lucide-react';
 
 export function ImageDropzone({ onFilesSelected, currentCount = 0, maxCount = 10 }) {
   const fileInputRef = useRef(null);
@@ -30,15 +30,15 @@ export function ImageDropzone({ onFilesSelected, currentCount = 0, maxCount = 10
 
   return (
     <div className="w-full">
-      {/* Upload Box */}
+      {/* Upload Box - Monochrome Minimal */}
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onClick={() => !isFull && fileInputRef.current?.click()}
-        className={`relative group cursor-pointer overflow-hidden rounded-3xl p-8 sm:p-12 text-center border-2 border-dashed transition-all duration-300 ${
+        className={`relative group cursor-pointer overflow-hidden rounded-xl p-8 sm:p-12 text-center border-2 border-dashed transition-all duration-200 ${
           isFull
-            ? 'border-slate-300 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/40 cursor-not-allowed'
-            : 'border-brand-500/40 dark:border-brand-500/30 hover:border-brand-500 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-brand-500/5 dark:hover:bg-brand-500/10 shadow-lg hover:shadow-brand-500/10'
+            ? 'border-zinc-300 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/40 cursor-not-allowed'
+            : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-100 bg-zinc-50/50 dark:bg-zinc-950/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50'
         }`}
       >
         <input
@@ -51,26 +51,26 @@ export function ImageDropzone({ onFilesSelected, currentCount = 0, maxCount = 10
           className="hidden"
         />
 
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
-            <UploadCloud className="w-8 h-8" />
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-zinc-200/80 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <UploadCloud className="w-6 h-6" />
           </div>
 
           <div className="space-y-1">
-            <h3 className="font-display font-bold text-lg sm:text-xl text-slate-800 dark:text-slate-100">
+            <h3 className="font-display font-bold text-base sm:text-lg text-zinc-900 dark:text-zinc-100">
               {isFull ? "Maximum 10 Images Reached" : "Drop your images here, or browse"}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
               Supports JPG, PNG, WEBP, GIF, SVG (Up to 10MB per file)
             </p>
           </div>
 
           {/* Indicator Badge: Max 10 images */}
-          <div className="mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800/80 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
-            <ImageIcon className="w-3.5 h-3.5 text-brand-500" />
-            <span>Image Limit Indicator:</span>
-            <span className={`font-mono font-bold ${isFull ? 'text-rose-500' : 'text-brand-500'}`}>
-              {currentCount} / {maxCount} images
+          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-200/80 dark:bg-zinc-900 text-xs font-medium text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-800">
+            <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Images Selected:</span>
+            <span className={`font-mono font-bold ${isFull ? 'text-rose-500' : 'text-zinc-900 dark:text-white'}`}>
+              {currentCount} / {maxCount}
             </span>
           </div>
         </div>

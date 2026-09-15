@@ -9,22 +9,22 @@ export function CountdownTimer({ initialSeconds = 600, onExpire }) {
 
   if (isExpired) {
     return (
-      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-xs font-bold animate-pulse">
-        <AlertTriangle className="w-4 h-4" />
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-bold">
+        <AlertTriangle className="w-3.5 h-3.5" />
         <span>EXPIRED</span>
       </div>
     );
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-mono font-bold text-sm tracking-wide transition-all duration-300 border ${
+    <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-mono font-bold text-xs tracking-wide transition-all duration-200 border ${
       isLowTime
-        ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40 animate-pulse-fast'
-        : 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/30'
+        ? 'bg-zinc-900 text-white border-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 animate-pulse'
+        : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800'
     }`}>
-      <Timer className={`w-4 h-4 ${isLowTime ? 'text-amber-500' : 'text-brand-500'}`} />
+      <Timer className="w-3.5 h-3.5" />
       <span>{formattedTime}</span>
-      <span className="text-[10px] font-sans font-normal uppercase opacity-75">left</span>
+      <span className="text-[10px] font-sans font-normal uppercase opacity-60">left</span>
     </div>
   );
 }

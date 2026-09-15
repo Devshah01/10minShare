@@ -103,16 +103,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
       {/* Header */}
       <Header onLogoClick={handleNewShare} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center">
         
         {/* Error Alert Toast */}
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm flex items-center justify-between animate-fade-in max-w-xl mx-auto w-full">
+          <div className="mb-6 p-4 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-sm flex items-center justify-between animate-fade-in max-w-xl mx-auto w-full">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>{errorMessage}</span>
@@ -139,26 +139,25 @@ export default function App() {
         ) : isUploading ? (
           <UploadProgress progress={uploadProgress} />
         ) : (
-          <div className="space-y-8 max-w-3xl mx-auto w-full">
-            {/* Hero Text */}
+          <div className="space-y-8 max-w-2xl mx-auto w-full">
+            {/* Hero Text - Minimal Monochrome */}
             <div className="text-center space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 text-xs font-semibold mb-2">
-                <Zap className="w-3.5 h-3.5" />
-                <span>Instant 10-Minute Ephemeral Storage</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-200/60 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-300/50 dark:border-zinc-800 text-xs font-medium mb-1">
+                <span>Instant 10-Minute Share</span>
               </div>
               
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-slate-900 dark:text-white tracking-tight">
+              <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-zinc-900 dark:text-white tracking-tight">
                 Share Photos Safely.<br />
-                <span className="gradient-text">Gone in 10 Minutes.</span>
+                <span className="font-light text-zinc-500 dark:text-zinc-400">Gone in 10 Minutes.</span>
               </h1>
 
-              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-sans">
-                Upload up to <strong className="text-slate-800 dark:text-slate-200">10 images</strong>. Get a instant link & QR Code. After 10 minutes, files and records are automatically self-destructed.
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto font-sans">
+                Upload up to 10 images. Get a link or QR code. Automatically self-destructs after 10 minutes.
               </p>
             </div>
 
             {/* Upload Area & Preview Grid */}
-            <div className="glass-card rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200/80 dark:border-slate-800/80">
+            <div className="rounded-2xl p-6 sm:p-8 space-y-6 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm">
               <ImageDropzone
                 onFilesSelected={handleFilesSelected}
                 currentCount={selectedFiles.length}
@@ -175,34 +174,34 @@ export default function App() {
             </div>
 
             {/* Feature Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-              <div className="p-4 rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 text-left space-y-1">
-                <div className="flex items-center gap-2 font-display font-bold text-sm text-slate-800 dark:text-slate-200">
-                  <ShieldCheck className="w-4 h-4 text-brand-500" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+                <div className="flex items-center gap-2 font-display font-bold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  <ShieldCheck className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
                   <span>Max 10 Images</span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Select and preview up to 10 images with single-click remove buttons.
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Preview and delete individual images before sharing.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 text-left space-y-1">
-                <div className="flex items-center gap-2 font-display font-bold text-sm text-slate-800 dark:text-slate-200">
-                  <Zap className="w-4 h-4 text-amber-500" />
+              <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+                <div className="flex items-center gap-2 font-display font-bold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  <Zap className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
                   <span>Link & QR Code</span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Instant scannable QR Code and share link with live countdown timer.
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Instant scannable QR Code and share link with live timer.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 text-left space-y-1">
-                <div className="flex items-center gap-2 font-display font-bold text-sm text-slate-800 dark:text-slate-200">
-                  <Lock className="w-4 h-4 text-emerald-500" />
+              <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+                <div className="flex items-center gap-2 font-display font-bold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  <Lock className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
                   <span>Auto-Delete in 10m</span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Cloudflare R2 files and PostgreSQL data self-destruct after 600s.
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Everything is permanently deleted after 10 minutes.
                 </p>
               </div>
             </div>
