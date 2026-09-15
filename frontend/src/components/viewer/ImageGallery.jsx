@@ -10,23 +10,19 @@ export function ImageGallery({ files, onSelectImage }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const handleSingleDownload = async (e, file) => {
+  const handleSingleDownload = (e, file) => {
     e.preventDefault();
     e.stopPropagation();
-    try {
-      const res = await fetch(file.downloadUrl);
-      const blob = await res.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = file.name || 'image.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      window.open(file.downloadUrl, '_blank');
-    }
+    const downloadUrl = `${file.downloadUrl}?download=true`;
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = downloadUrl;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 6000);
   };
 
   return (
