@@ -11,14 +11,14 @@ export function ThemeToggle() {
       {/* Mobile Minimal Bold Button */}
       <button
         onClick={toggleTheme}
-        className="sm:hidden p-2 text-zinc-900 dark:text-white focus:outline-none transition-all flex items-center justify-center active:scale-90"
+        className="sm:hidden p-2 text-zinc-900 dark:text-white focus:outline-none transition-all flex items-center justify-center active:scale-90 font-extrabold"
         aria-label="Toggle theme"
         title="Toggle Light / Dark mode"
       >
         {isDark ? (
-          <Sun className="w-5 h-5 stroke-[2.5]" />
+          <Sun className="w-5 h-5 stroke-[2.8]" />
         ) : (
-          <Moon className="w-5 h-5 stroke-[2.5]" />
+          <Moon className="w-5 h-5 stroke-[2.8]" />
         )}
       </button>
 
