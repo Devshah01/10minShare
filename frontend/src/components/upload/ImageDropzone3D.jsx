@@ -212,7 +212,7 @@ export function ImageDropzone3D({
         )}
 
         {/* RIGHT CARD (Background 3D) */}
-        {totalCards > 1 && (
+        {totalCards > 2 && (
           <div
             onClick={() => handleCardClick(rightCardData.index, rightCardData.card?.type === 'add_card')}
             className="absolute w-[220px] sm:w-[260px] h-[220px] sm:h-[260px] rounded-[2.2rem] bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xl transition-all duration-500 ease-out cursor-pointer overflow-hidden aspect-square"

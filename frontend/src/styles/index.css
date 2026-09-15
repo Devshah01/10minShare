@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 dark:bg-[#070a0f] text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300;
+    @apply bg-zinc-200/80 dark:bg-[#070a0f] text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300;
   }
 
   h1, h2, h3, h4, h5, h6 {
