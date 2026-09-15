@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { UploadCloud, Plus, X, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
 export function ImageDropzone3D({ 
@@ -19,23 +19,36 @@ export function ImageDropzone3D({
 
   const isFull = files.length >= maxCount;
 
-  // Generate image preview items
-  const fileItems = files.map((file, idx) => ({
-    type: 'image',
-    file,
-    url: URL.createObjectURL(file),
-    name: file.name,
-    index: idx,
-  }));
+  // Memoize blob URLs so images are NEVER re-decoded during 3D wheel rotation
+  const fileItems = useMemo(() => {
+    return files.map((file, idx) => ({
+      type: 'image',
+      file,
+      url: URL.createObjectURL(file),
+      name: file.name,
+      index: idx,
+    }));
+  }, [files]);
+
+  // Clean up object URLs on unmount or when files change
+  useEffect(() => {
+    return () => {
+      fileItems.forEach((item) => {
+        if (item.url) URL.revokeObjectURL(item.url);
+      });
+    };
+  }, [fileItems]);
 
   // Append Blank "Add Image" Card at the end if not full
-  const allCards = isFull 
-    ? fileItems 
-    : [...fileItems, { type: 'add_card', index: fileItems.length }];
+  const allCards = useMemo(() => {
+    return isFull 
+      ? fileItems 
+      : [...fileItems, { type: 'add_card', index: fileItems.length }];
+  }, [fileItems, isFull]);
 
   const totalCards = allCards.length;
 
-  // Refs for direct DOM manipulation to achieve 120 FPS zero-lag animations
+  // Direct DOM manipulation refs for 120 FPS zero-lag animations
   const cardRefs = useRef({});
   const virtualIndexRef = useRef(0);
   const targetIndexRef = useRef(activeIndex);
@@ -47,10 +60,11 @@ export function ImageDropzone3D({
   const dragStartVirtualIndex = useRef(0);
   const lastPointerX = useRef(0);
   const lastPointerTime = useRef(0);
+  const lastFrameTime = useRef(0);
   const velocity = useRef(0);
   const animFrameId = useRef(null);
 
-  // Directly update 3D CSS transforms on DOM nodes without triggering React re-renders
+  // Hardware-accelerated 3D transforms directly applied to DOM nodes
   const apply3DTransforms = useCallback((v) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
     
@@ -73,7 +87,7 @@ export function ImageDropzone3D({
 
       const absDelta = Math.abs(delta);
 
-      // Hide cards out of view bounds
+      // Hide cards far out of view bounds
       if (absDelta > 2.5) {
         el.style.opacity = '0';
         el.style.pointerEvents = 'none';
@@ -93,7 +107,8 @@ export function ImageDropzone3D({
       const brightness = Math.max(55, 100 - absDelta * 22);
       const zIndex = Math.round(1000 - absDelta * 100);
 
-      el.style.transform = `perspective(1000px) translateX(${translateX.toFixed(2)}px) translateZ(${translateZ.toFixed(2)}px) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      // GPU hardware acceleration
+      el.style.transform = `translate3d(${translateX.toFixed(2)}px, 0px, ${translateZ.toFixed(2)}px) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
       el.style.opacity = opacity.toFixed(3);
       el.style.filter = `brightness(${brightness.toFixed(0)}%)`;
       el.style.zIndex = zIndex;
@@ -111,21 +126,25 @@ export function ImageDropzone3D({
     apply3DTransforms(virtualIndexRef.current);
   }, [totalCards, activeIndex, apply3DTransforms]);
 
-  // Main High-Performance Physics Loop (Direct DOM + Hardware Acceleration)
+  // Frame-Rate Independent Physics Loop (60Hz / 90Hz / 120Hz / 144Hz Smoothness)
   const updatePhysics = useCallback(() => {
     if (isDragging.current) return;
+
+    const now = performance.now();
+    const rawDt = (now - (lastFrameTime.current || now)) / 16.666;
+    const dt = Math.min(2, Math.max(0.5, rawDt)); // Clamp frame delta
+    lastFrameTime.current = now;
 
     let currentV = virtualIndexRef.current;
     let target = targetIndexRef.current;
     let v = velocity.current;
 
-    // Apply friction to momentum velocity
-    v *= 0.86;
+    // Frame-rate independent friction dampening
+    v *= Math.pow(0.85, dt);
     velocity.current = v;
 
-    if (Math.abs(v) > 0.001) {
-      // Coasting with momentum
-      currentV += v;
+    if (Math.abs(v) > 0.0005) {
+      currentV += v * dt;
       
       let closestTarget = Math.round(currentV);
       if (totalCards >= 3) {
@@ -138,11 +157,9 @@ export function ImageDropzone3D({
         setActiveIndex(closestTarget);
       }
     } else {
-      // Spring snapping towards targetIndex
       velocity.current = 0;
       
       let diff = target - currentV;
-
       if (totalCards >= 3) {
         const half = totalCards / 2;
         if (diff > half) diff -= totalCards;
@@ -152,16 +169,15 @@ export function ImageDropzone3D({
       if (Math.abs(diff) < 0.001) {
         currentV = target;
       } else {
-        // Fast, smooth spring easing
-        currentV += diff * 0.22;
+        // Frame-rate independent spring interpolation
+        currentV += diff * (1 - Math.pow(1 - 0.22, dt));
       }
     }
 
     virtualIndexRef.current = currentV;
     apply3DTransforms(currentV);
 
-    // Keep loop running if still moving
-    if (Math.abs(velocity.current) > 0.001 || Math.abs(target - currentV) >= 0.001) {
+    if (Math.abs(velocity.current) > 0.0005 || Math.abs(target - currentV) >= 0.001) {
       animFrameId.current = requestAnimationFrame(updatePhysics);
     } else {
       animFrameId.current = null;
@@ -169,6 +185,7 @@ export function ImageDropzone3D({
   }, [totalCards, apply3DTransforms]);
 
   const startPhysicsLoop = useCallback(() => {
+    lastFrameTime.current = performance.now();
     if (!animFrameId.current) {
       animFrameId.current = requestAnimationFrame(updatePhysics);
     }
@@ -216,7 +233,6 @@ export function ImageDropzone3D({
     const dt = Math.max(1, now - lastPointerTime.current);
     const dx = currentX - lastPointerX.current;
 
-    // Responsive swipe distance (160px on mobile = 1 card shift)
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
     const SWIPE_SENSITIVITY = isMobile ? 160 : 210;
 
@@ -252,7 +268,7 @@ export function ImageDropzone3D({
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch (_) {}
 
-    let projectedVirtual = virtualIndexRef.current + velocity.current * 6;
+    let projectedVirtual = virtualIndexRef.current + velocity.current * 5;
     let snapTarget = Math.round(projectedVirtual);
 
     if (totalCards >= 3) {
@@ -409,7 +425,7 @@ export function ImageDropzone3D({
         className="hidden"
       />
 
-      {/* 3D Spinning Wheel Perspective Container (Clipped horizontally on mobile screens) */}
+      {/* 3D Spinning Wheel Perspective Container */}
       <div 
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -419,7 +435,7 @@ export function ImageDropzone3D({
         onPointerCancel={handlePointerUp}
         onWheel={handleWheel}
         className="relative w-full max-w-full h-[250px] sm:h-[310px] flex items-center justify-center select-none touch-pan-y cursor-grab active:cursor-grabbing overflow-x-clip sm:overflow-visible py-2"
-        style={{ perspective: '1000px' }}
+        style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
       >
         {/* Render cards dynamically on the 3D spinning wheel */}
         {allCards.map((card, i) => {
@@ -432,6 +448,7 @@ export function ImageDropzone3D({
               ref={(el) => { cardRefs.current[cardKey] = el; }}
               onClick={() => handleCardClick(card.index, card.type === 'add_card', cardKey)}
               className={`group absolute w-[200px] sm:w-[270px] h-[200px] sm:h-[270px] rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900 border-2 border-zinc-200/90 dark:border-zinc-800/90 shadow-xl cursor-pointer overflow-hidden aspect-square transition-shadow duration-300`}
+              style={{ willChange: 'transform, opacity, filter', backfaceVisibility: 'hidden' }}
             >
               {renderCardContent(card, isCenter)}
             </div>
