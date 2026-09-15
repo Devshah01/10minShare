@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/common/Header';
-import { Footer } from './components/common/Footer';
 import { ImageDropzone } from './components/upload/ImageDropzone';
 import { ImagePreviewGrid } from './components/upload/ImagePreviewGrid';
 import { UploadProgress } from './components/upload/UploadProgress';
@@ -140,12 +139,8 @@ export default function App() {
           <UploadProgress progress={uploadProgress} />
         ) : (
           <div className="space-y-8 max-w-2xl mx-auto w-full">
-            {/* Hero Text - Minimal Monochrome */}
+            {/* Hero Text */}
             <div className="text-center space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-200/60 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-300/50 dark:border-zinc-800 text-xs font-medium mb-1">
-                <span>Instant 10-Minute Share</span>
-              </div>
-              
               <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-zinc-900 dark:text-white tracking-tight">
                 Share Photos Safely.<br />
                 <span className="font-light text-zinc-500 dark:text-zinc-400">Gone in 10 Minutes.</span>
@@ -210,9 +205,6 @@ export default function App() {
         )}
 
       </main>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }
