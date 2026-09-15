@@ -101,12 +101,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-zinc-200/80 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-200/80 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white overflow-x-hidden">
       {/* Header */}
       <Header onLogoClick={handleNewShare} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col justify-start">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col justify-start overflow-x-hidden">
         
         {/* Error Alert Toast */}
         {errorMessage && (

@@ -14,11 +14,8 @@ export function ImageDropzone3D({
   
   // activeIndex tracks the current integer target card
   const [activeIndex, setActiveIndex] = useState(0);
-  
-  // virtualIndex tracks the continuous float position for smooth 3D wheel rendering
-  const [virtualIndex, setVirtualIndex] = useState(0);
-  const virtualIndexRef = useRef(0);
-  virtualIndexRef.current = virtualIndex;
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
 
   const isFull = files.length >= maxCount;
 
@@ -38,7 +35,9 @@ export function ImageDropzone3D({
 
   const totalCards = allCards.length;
 
-  // Sync virtualIndex when totalCards changes or activeIndex changes programmatically
+  // Refs for direct DOM manipulation to achieve 120 FPS zero-lag animations
+  const cardRefs = useRef({});
+  const virtualIndexRef = useRef(0);
   const targetIndexRef = useRef(activeIndex);
   targetIndexRef.current = activeIndex;
 
@@ -51,15 +50,68 @@ export function ImageDropzone3D({
   const velocity = useRef(0);
   const animFrameId = useRef(null);
 
-  // Clamp or normalize activeIndex when cards count changes
+  // Directly update 3D CSS transforms on DOM nodes without triggering React re-renders
+  const apply3DTransforms = useCallback((v) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    
+    // Responsive 3D wheel radius offsets
+    const radiusX = isMobile ? 115 : 190;
+    const radiusZ = isMobile ? 120 : 170;
+    const angleStep = isMobile ? 26 : 32;
+
+    allCards.forEach((card, i) => {
+      const cardKey = card.type === 'add_card' ? 'add_card' : `img-${card.index}-${card.name}`;
+      const el = cardRefs.current[cardKey];
+      if (!el) return;
+
+      let delta = i - v;
+      if (totalCards >= 3) {
+        const half = totalCards / 2;
+        while (delta > half) delta -= totalCards;
+        while (delta < -half) delta += totalCards;
+      }
+
+      const absDelta = Math.abs(delta);
+
+      // Hide cards out of view bounds
+      if (absDelta > 2.5) {
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        return;
+      }
+
+      const angleDeg = delta * angleStep;
+      const angleRad = (angleDeg * Math.PI) / 180;
+
+      const translateX = Math.sin(angleRad) * radiusX;
+      const translateZ = (Math.cos(angleRad) - 1) * radiusZ;
+      const rotateY = -angleDeg * 0.75;
+      const rotateZ = -delta * 1.8;
+
+      const scale = Math.max(0.65, 1 - absDelta * 0.11);
+      const opacity = Math.max(0, 1 - Math.pow(absDelta / 2.2, 1.8));
+      const brightness = Math.max(55, 100 - absDelta * 22);
+      const zIndex = Math.round(1000 - absDelta * 100);
+
+      el.style.transform = `perspective(1000px) translateX(${translateX.toFixed(2)}px) translateZ(${translateZ.toFixed(2)}px) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      el.style.opacity = opacity.toFixed(3);
+      el.style.filter = `brightness(${brightness.toFixed(0)}%)`;
+      el.style.zIndex = zIndex;
+      el.style.pointerEvents = absDelta < 0.3 ? 'auto' : (opacity < 0.2 ? 'none' : 'auto');
+    });
+  }, [allCards, totalCards]);
+
+  // Sync virtualIndex and update DOM whenever cards count changes
   useEffect(() => {
     if (activeIndex >= totalCards) {
       const newIdx = Math.max(0, totalCards - 1);
       setActiveIndex(newIdx);
+      virtualIndexRef.current = newIdx;
     }
-  }, [totalCards, activeIndex]);
+    apply3DTransforms(virtualIndexRef.current);
+  }, [totalCards, activeIndex, apply3DTransforms]);
 
-  // Main Physics Animation Loop for inertia and spring snap
+  // Main High-Performance Physics Loop (Direct DOM + Hardware Acceleration)
   const updatePhysics = useCallback(() => {
     if (isDragging.current) return;
 
@@ -68,28 +120,29 @@ export function ImageDropzone3D({
     let v = velocity.current;
 
     // Apply friction to momentum velocity
-    v *= 0.88;
+    v *= 0.86;
     velocity.current = v;
 
     if (Math.abs(v) > 0.001) {
       // Coasting with momentum
       currentV += v;
       
-      // Calculate closest target index while coasting
       let closestTarget = Math.round(currentV);
       if (totalCards >= 3) {
         closestTarget = ((closestTarget % totalCards) + totalCards) % totalCards;
       } else {
         closestTarget = Math.max(0, Math.min(totalCards - 1, closestTarget));
       }
-      setActiveIndex(closestTarget);
+
+      if (closestTarget !== activeIndexRef.current) {
+        setActiveIndex(closestTarget);
+      }
     } else {
       // Spring snapping towards targetIndex
       velocity.current = 0;
       
       let diff = target - currentV;
 
-      // Handle shortest circular distance for wrapping when totalCards >= 3
       if (totalCards >= 3) {
         const half = totalCards / 2;
         if (diff > half) diff -= totalCards;
@@ -99,12 +152,13 @@ export function ImageDropzone3D({
       if (Math.abs(diff) < 0.001) {
         currentV = target;
       } else {
-        // Smooth exponential spring dampening (0.18 factor for responsive, silky feel)
-        currentV += diff * 0.18;
+        // Fast, smooth spring easing
+        currentV += diff * 0.22;
       }
     }
 
-    setVirtualIndex(currentV);
+    virtualIndexRef.current = currentV;
+    apply3DTransforms(currentV);
 
     // Keep loop running if still moving
     if (Math.abs(velocity.current) > 0.001 || Math.abs(target - currentV) >= 0.001) {
@@ -112,7 +166,7 @@ export function ImageDropzone3D({
     } else {
       animFrameId.current = null;
     }
-  }, [totalCards]);
+  }, [totalCards, apply3DTransforms]);
 
   const startPhysicsLoop = useCallback(() => {
     if (!animFrameId.current) {
@@ -120,7 +174,7 @@ export function ImageDropzone3D({
     }
   }, [updatePhysics]);
 
-  // Start physics loop whenever target index changes
+  // Animate to card by target index
   const animateToCard = (targetIdx) => {
     let normalized = targetIdx;
     if (totalCards >= 3) {
@@ -135,7 +189,6 @@ export function ImageDropzone3D({
 
   // Pointer Drag Handlers (Unified Touch & Mouse)
   const handlePointerDown = (e) => {
-    // Only handle primary button
     if (e.button !== undefined && e.button !== 0) return;
     
     isDragging.current = true;
@@ -150,7 +203,9 @@ export function ImageDropzone3D({
       animFrameId.current = null;
     }
 
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
   };
 
   const handlePointerMove = (e) => {
@@ -161,11 +216,12 @@ export function ImageDropzone3D({
     const dt = Math.max(1, now - lastPointerTime.current);
     const dx = currentX - lastPointerX.current;
 
-    // Calculate drag velocity (cards per ms)
-    // 220px drag distance = 1 full card shift
-    const SWIPE_SENSITIVITY = 220;
-    const instantVelocity = -(dx / SWIPE_SENSITIVITY) / (dt / 16.6); // normalized to 60fps frame delta
-    velocity.current = velocity.current * 0.4 + instantVelocity * 0.6; // smooth velocity filter
+    // Responsive swipe distance (160px on mobile = 1 card shift)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const SWIPE_SENSITIVITY = isMobile ? 160 : 210;
+
+    const instantVelocity = -(dx / SWIPE_SENSITIVITY) / (dt / 16.6);
+    velocity.current = velocity.current * 0.3 + instantVelocity * 0.7;
 
     lastPointerX.current = currentX;
     lastPointerTime.current = now;
@@ -173,16 +229,19 @@ export function ImageDropzone3D({
     const totalDragX = currentX - dragStartX.current;
     let newVirtual = dragStartVirtualIndex.current - (totalDragX / SWIPE_SENSITIVITY);
 
-    setVirtualIndex(newVirtual);
+    virtualIndexRef.current = newVirtual;
+    apply3DTransforms(newVirtual);
 
-    // Update activeIndex to nearest card while dragging
+    // Update activeIndex indicator during drag
     let rounded = Math.round(newVirtual);
     if (totalCards >= 3) {
       rounded = ((rounded % totalCards) + totalCards) % totalCards;
     } else {
       rounded = Math.max(0, Math.min(totalCards - 1, rounded));
     }
-    setActiveIndex(rounded);
+    if (rounded !== activeIndexRef.current) {
+      setActiveIndex(rounded);
+    }
   };
 
   const handlePointerUp = (e) => {
@@ -193,8 +252,7 @@ export function ImageDropzone3D({
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch (_) {}
 
-    // Determine snap target based on current virtual index + velocity boost
-    let projectedVirtual = virtualIndexRef.current + velocity.current * 8;
+    let projectedVirtual = virtualIndexRef.current + velocity.current * 6;
     let snapTarget = Math.round(projectedVirtual);
 
     if (totalCards >= 3) {
@@ -207,16 +265,17 @@ export function ImageDropzone3D({
     startPhysicsLoop();
   };
 
-  // Wheel Scroll Interaction (Trackpad & Mouse Scroll)
+  // Wheel Scroll Interaction
   const handleWheel = (e) => {
     const delta = e.deltaX || e.deltaY;
     if (Math.abs(delta) < 4) return;
 
-    const scrollSensitivity = 0.0025;
+    const scrollSensitivity = 0.002;
     let newV = virtualIndexRef.current + delta * scrollSensitivity;
 
-    velocity.current = delta * scrollSensitivity * 0.5;
-    setVirtualIndex(newV);
+    velocity.current = delta * scrollSensitivity * 0.4;
+    virtualIndexRef.current = newV;
+    apply3DTransforms(newV);
 
     let nearest = Math.round(newV);
     if (totalCards >= 3) {
@@ -224,7 +283,9 @@ export function ImageDropzone3D({
     } else {
       nearest = Math.max(0, Math.min(totalCards - 1, nearest));
     }
-    setActiveIndex(nearest);
+    if (nearest !== activeIndexRef.current) {
+      setActiveIndex(nearest);
+    }
     startPhysicsLoop();
   };
 
@@ -251,53 +312,25 @@ export function ImageDropzone3D({
     }
   };
 
-  const handleCardClick = (cardIdx, isAddCard, delta) => {
-    // If user was dragging significantly, ignore click to prevent accidental triggers
+  const handleCardClick = (cardIdx, isAddCard, cardKey) => {
     if (Math.abs(virtualIndexRef.current - dragStartVirtualIndex.current) > 0.15) {
       return;
     }
 
+    let delta = cardIdx - virtualIndexRef.current;
+    if (totalCards >= 3) {
+      const half = totalCards / 2;
+      while (delta > half) delta -= totalCards;
+      while (delta < -half) delta += totalCards;
+    }
+
     if (Math.abs(delta) < 0.3) {
-      // Clicked center active card
       if (isAddCard && !isFull) {
         fileInputRef.current?.click();
       }
     } else {
-      // Clicked side card -> rotate wheel to bring it to center
       animateToCard(cardIdx);
     }
-  };
-
-  // Helper to compute 3D transform for a card given its relative index delta on the wheel
-  const compute3DTransform = (delta) => {
-    const absDelta = Math.abs(delta);
-    
-    // Cylindrical wheel angle (34 degrees step per card)
-    const angleDeg = delta * 34;
-    const angleRad = (angleDeg * Math.PI) / 180;
-    
-    // 3D positioning
-    const translateX = Math.sin(angleRad) * 250; // horizontal arc displacement
-    const translateZ = (Math.cos(angleRad) - 1) * 180; // depth arc displacement (pushes background cards into screen)
-    const rotateY = -angleDeg * 0.8; // card face rotation along wheel curve
-    const rotateZ = -delta * 2.2; // subtle aesthetic tilt
-    
-    // Scale & Visual falloff
-    const scale = Math.max(0.65, 1 - absDelta * 0.12);
-    const opacity = Math.max(0, 1 - Math.pow(absDelta / 2.3, 1.8));
-    const brightness = Math.max(50, 100 - absDelta * 22);
-    const zIndex = Math.round(1000 - absDelta * 100);
-
-    return {
-      style: {
-        transform: `perspective(1000px) translateX(${translateX.toFixed(2)}px) translateZ(${translateZ.toFixed(2)}px) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`,
-        opacity: opacity.toFixed(3),
-        filter: `brightness(${brightness.toFixed(0)}%)`,
-        zIndex,
-        pointerEvents: opacity < 0.15 ? 'none' : 'auto',
-      },
-      isCenter: absDelta < 0.3,
-    };
   };
 
   // Render card content inside 3D frame
@@ -306,16 +339,16 @@ export function ImageDropzone3D({
 
     if (card.type === 'add_card') {
       return (
-        <div className="w-full h-full p-4 sm:p-5 flex flex-col items-center justify-center select-none">
-          <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center rounded-3xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/60 p-4 transition-colors hover:border-zinc-500 dark:hover:border-zinc-400">
-            <div className="w-14 h-14 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
-              <Plus className="w-7 h-7 stroke-[2.5]" />
+        <div className="w-full h-full p-3 sm:p-5 flex flex-col items-center justify-center select-none">
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 sm:gap-3 text-center rounded-2xl sm:rounded-3xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/60 p-3 sm:p-4 transition-colors hover:border-zinc-500 dark:hover:border-zinc-400">
+            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
+              <Plus className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
             </div>
-            <div className="space-y-1">
-              <p className="font-display font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
+            <div className="space-y-0.5 sm:space-y-1">
+              <p className="font-display font-extrabold text-xs sm:text-base text-zinc-900 dark:text-white">
                 Add Image
               </p>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-[180px] mx-auto leading-tight">
+              <p className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 max-w-[160px] sm:max-w-[180px] mx-auto leading-tight">
                 JPG, PNG, WEBP, GIF, SVG (Up to 50MB)
               </p>
             </div>
@@ -326,38 +359,36 @@ export function ImageDropzone3D({
 
     // Image Card
     return (
-      <div className="w-full h-full flex flex-col justify-between p-4 relative select-none">
-        {/* Delete Badge on Active Center Card */}
-        {isCenter && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemoveFile(card.index);
-              if (activeIndex >= files.length - 1 && activeIndex > 0) {
-                animateToCard(activeIndex - 1);
-              }
-            }}
-            className="absolute top-4 right-4 z-30 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center transition-all shadow-md active:scale-95 hover:scale-110"
-            title="Remove image"
-          >
-            <X className="w-4 h-4 stroke-[2.5]" />
-          </button>
-        )}
+      <div className="w-full h-full flex flex-col justify-between p-3 sm:p-4 relative select-none">
+        {/* Delete Badge */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemoveFile(card.index);
+            if (activeIndex >= files.length - 1 && activeIndex > 0) {
+              animateToCard(activeIndex - 1);
+            }
+          }}
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center transition-all shadow-md active:scale-95 hover:scale-110"
+          title="Remove image"
+        >
+          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+        </button>
 
         {/* Image Preview Container */}
-        <div className="flex-1 w-full overflow-hidden rounded-3xl relative bg-zinc-100 dark:bg-zinc-800">
+        <div className="flex-1 w-full overflow-hidden rounded-2xl sm:rounded-3xl relative bg-zinc-100 dark:bg-zinc-800">
           <img
             src={card.url}
             alt={card.name}
             draggable={false}
-            className="w-full h-full object-cover rounded-3xl shadow-sm pointer-events-none"
+            className="w-full h-full object-cover rounded-2xl sm:rounded-3xl shadow-sm pointer-events-none"
           />
         </div>
 
         {/* Bottom Info Badge Pill */}
-        <div className="flex items-center justify-start mt-2">
-          <div className="px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-xs font-extrabold text-zinc-900 dark:text-white shadow-md truncate max-w-[200px] flex items-center gap-1.5">
-            <ImageIcon className="w-3.5 h-3.5 shrink-0 text-zinc-500" />
+        <div className="flex items-center justify-start mt-1.5 sm:mt-2">
+          <div className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-[11px] sm:text-xs font-extrabold text-zinc-900 dark:text-white shadow-md truncate max-w-[170px] sm:max-w-[200px] flex items-center gap-1.5">
+            <ImageIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-zinc-500" />
             <span className="truncate">{card.name}</span>
           </div>
         </div>
@@ -366,7 +397,7 @@ export function ImageDropzone3D({
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-6 py-4">
+    <div className="w-full max-w-full overflow-x-clip flex flex-col items-center gap-4 sm:gap-6 py-2 sm:py-4">
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -378,7 +409,7 @@ export function ImageDropzone3D({
         className="hidden"
       />
 
-      {/* 3D Spinning Wheel Perspective Container */}
+      {/* 3D Spinning Wheel Perspective Container (Clipped horizontally on mobile screens) */}
       <div 
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -387,36 +418,20 @@ export function ImageDropzone3D({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onWheel={handleWheel}
-        className="relative w-full max-w-[340px] sm:max-w-[460px] h-[280px] sm:h-[320px] flex items-center justify-center select-none touch-pan-y cursor-grab active:cursor-grabbing overflow-visible"
+        className="relative w-full max-w-full h-[250px] sm:h-[310px] flex items-center justify-center select-none touch-pan-y cursor-grab active:cursor-grabbing overflow-x-clip sm:overflow-visible py-2"
         style={{ perspective: '1000px' }}
       >
         {/* Render cards dynamically on the 3D spinning wheel */}
         {allCards.map((card, i) => {
-          // Calculate delta relative to virtualIndex
-          let delta = i - virtualIndex;
-
-          // Wrap delta for circular 3D wheel loop if totalCards >= 3
-          if (totalCards >= 3) {
-            const half = totalCards / 2;
-            while (delta > half) delta -= totalCards;
-            while (delta < -half) delta += totalCards;
-          }
-
-          // Skip rendering cards that are far behind in 3D wheel space for performance
-          if (Math.abs(delta) > 2.8) return null;
-
-          const { style, isCenter } = compute3DTransform(delta);
+          const cardKey = card.type === 'add_card' ? 'add_card' : `img-${card.index}-${card.name}`;
+          const isCenter = i === activeIndex;
 
           return (
             <div
-              key={card.type === 'add_card' ? 'add_card' : `img-${card.index}-${card.name}`}
-              onClick={() => handleCardClick(card.index, card.type === 'add_card', delta)}
-              className={`group absolute w-[240px] sm:w-[280px] h-[240px] sm:h-[280px] rounded-[2.5rem] bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900 border-2 ${
-                isCenter 
-                  ? 'border-zinc-300 dark:border-zinc-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]' 
-                  : 'border-zinc-200/80 dark:border-zinc-800 shadow-xl'
-              } transition-shadow duration-300 cursor-pointer overflow-hidden aspect-square`}
-              style={style}
+              key={cardKey}
+              ref={(el) => { cardRefs.current[cardKey] = el; }}
+              onClick={() => handleCardClick(card.index, card.type === 'add_card', cardKey)}
+              className={`group absolute w-[200px] sm:w-[270px] h-[200px] sm:h-[270px] rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900 border-2 border-zinc-200/90 dark:border-zinc-800/90 shadow-xl cursor-pointer overflow-hidden aspect-square transition-shadow duration-300`}
             >
               {renderCardContent(card, isCenter)}
             </div>
@@ -425,7 +440,7 @@ export function ImageDropzone3D({
       </div>
 
       {/* Navigation Strip & Controls */}
-      <div className="w-full max-w-md space-y-4 animate-fade-in">
+      <div className="w-full max-w-md space-y-3 sm:space-y-4 px-2">
         {/* Active Navigation Bar */}
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2">
@@ -468,7 +483,7 @@ export function ImageDropzone3D({
               <div
                 key={idx}
                 onClick={() => animateToCard(idx)}
-                className={`relative w-14 h-14 shrink-0 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
+                className={`relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
                   idx === activeIndex
                     ? 'border-zinc-900 dark:border-white scale-105 shadow-md'
                     : 'border-transparent opacity-60 hover:opacity-100'
@@ -483,7 +498,7 @@ export function ImageDropzone3D({
                 onClick={() => {
                   animateToCard(fileItems.length);
                 }}
-                className={`w-14 h-14 shrink-0 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-white flex flex-col items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-white flex flex-col items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer ${
                   activeIndex === fileItems.length ? 'border-zinc-900 dark:border-white scale-105' : ''
                 }`}
                 title="Add Image Card"
@@ -500,7 +515,7 @@ export function ImageDropzone3D({
         <button
           onClick={onSubmit}
           disabled={isUploading}
-          className="w-full max-w-md py-4 px-6 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-display font-extrabold text-sm sm:text-base tracking-tight flex items-center justify-center gap-3 shadow-xl hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full max-w-md py-3.5 sm:py-4 px-6 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-display font-extrabold text-sm sm:text-base tracking-tight flex items-center justify-center gap-3 shadow-xl hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isUploading ? (
             <span>Uploading & Generating Link...</span>
