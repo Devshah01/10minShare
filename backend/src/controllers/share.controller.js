@@ -133,8 +133,11 @@ export const shareController = {
 
       const fileData = await storageService.getFile(targetFile.file_key);
 
+      const isDownload = req.query.download === 'true' || req.query.disposition === 'attachment';
+      const dispositionType = isDownload ? 'attachment' : 'attachment';
+
       res.setHeader('Content-Type', fileData.contentType || targetFile.mime_type);
-      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(targetFile.original_name)}"`);
+      res.setHeader('Content-Disposition', `${dispositionType}; filename="${encodeURIComponent(targetFile.original_name)}"`);
       if (fileData.contentLength) {
         res.setHeader('Content-Length', fileData.contentLength);
       }

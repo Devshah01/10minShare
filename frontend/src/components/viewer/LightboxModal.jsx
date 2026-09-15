@@ -12,6 +12,23 @@ export function LightboxModal({ file, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const handleDownload = async () => {
+    try {
+      const res = await fetch(file.downloadUrl);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = file.name || 'image.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      window.open(file.downloadUrl, '_blank');
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
       {/* Top Controls */}
@@ -20,14 +37,14 @@ export function LightboxModal({ file, onClose }) {
           {file.name}
         </div>
         <div className="flex items-center gap-3">
-          <a
-            href={file.downloadUrl}
-            download={file.name}
-            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-            title="Download image"
+          <button
+            onClick={handleDownload}
+            type="button"
+            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+            title="Download image to local device"
           >
             <Download className="w-5 h-5" />
-          </a>
+          </button>
           <button
             onClick={onClose}
             type="button"

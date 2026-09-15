@@ -10,6 +10,25 @@ export function ImageGallery({ files, onSelectImage }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const handleSingleDownload = async (e, file) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const res = await fetch(file.downloadUrl);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = file.name || 'image.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      window.open(file.downloadUrl, '_blank');
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
       {files.map((file) => (
@@ -48,15 +67,15 @@ export function ImageGallery({ files, onSelectImage }) {
               </p>
             </div>
 
-            <a
-              href={file.downloadUrl}
-              download={file.name}
-              className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500 text-brand-600 dark:text-brand-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0"
-              title="Download image"
+            <button
+              onClick={(e) => handleSingleDownload(e, file)}
+              type="button"
+              className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500 text-brand-600 dark:text-brand-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+              title="Download image to local device"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download</span>
-            </a>
+            </button>
           </div>
         </div>
       ))}
