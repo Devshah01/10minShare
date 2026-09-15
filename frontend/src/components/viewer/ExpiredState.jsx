@@ -25,7 +25,7 @@ export function ExpiredState({ onStartNew }) {
       <button
         onClick={onStartNew}
         type="button"
-        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-600 hover:to-emerald-700 text-white font-display font-bold text-sm shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2 transition-all"
+        className="w-full py-3.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-display font-extrabold text-sm shadow-xl hover:bg-zinc-800 dark:hover:bg-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
       >
         <PlusCircle className="w-4 h-4" />
         <span>Upload New 10-Min Share</span>

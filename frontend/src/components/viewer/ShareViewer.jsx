@@ -84,7 +84,7 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
         <p className="text-rose-500 font-semibold text-sm">{error || 'Session unavailable'}</p>
         <button
           onClick={onBackToUpload}
-          className="px-6 py-2.5 rounded-xl bg-brand-500 text-white text-xs font-bold"
+          className="px-6 py-2.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-display font-extrabold text-xs shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all active:scale-95"
         >
           Go to Upload Page
         </button>
