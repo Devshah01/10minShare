@@ -21,6 +21,8 @@ app.use(helmet({
 // CORS Configuration
 const allowedOrigins = [
   config.frontendUrl,
+  'https://10minshare.com',
+  'https://www.10minshare.com',
   'https://10minshare.pages.dev',
   'http://localhost:5173',
   'http://localhost:3000',
