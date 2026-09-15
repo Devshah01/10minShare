@@ -10,6 +10,9 @@ import { initCleanupTask } from './services/cleanup.service.js';
 
 const app = express();
 
+// Trust reverse proxy for HTTPS protocol detection on GCP Cloud Run
+app.set('trust proxy', true);
+
 // Security Header Middlewares
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
@@ -18,6 +21,7 @@ app.use(helmet({
 // CORS Configuration
 const allowedOrigins = [
   config.frontendUrl,
+  'https://10minshare.pages.dev',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173'
@@ -25,13 +29,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || config.nodeEnv === 'development') {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow during initial dev setup
-    }
+    callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  exposedHeaders: ['Content-Disposition', 'Content-Type', 'Content-Length']
 }));
 
 app.use(express.json());

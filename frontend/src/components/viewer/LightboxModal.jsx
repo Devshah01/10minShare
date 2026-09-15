@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, Download, ZoomIn } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 
 export function LightboxModal({ file, onClose }) {
   if (!file) return null;
@@ -12,18 +12,29 @@ export function LightboxModal({ file, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const handleDownload = () => {
-    const downloadUrl = `${file.downloadUrl}?download=true`;
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = downloadUrl;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
-    }, 6000);
+  const getSecureUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') && !url.includes('localhost')) {
+      return url.replace('http://', 'https://');
+    }
+    return url;
   };
+
+  const handleDownload = () => {
+    const targetUrl = getSecureUrl(file.downloadUrl);
+    const downloadUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}download=true`;
+    
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.download = file.name || 'image.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const secureImgUrl = getSecureUrl(file.downloadUrl);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
@@ -54,7 +65,7 @@ export function LightboxModal({ file, onClose }) {
       {/* Main Image View */}
       <div className="max-w-5xl max-h-[85vh] p-2 flex items-center justify-center">
         <img
-          src={file.downloadUrl}
+          src={secureImgUrl}
           alt={file.name}
           className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
         />

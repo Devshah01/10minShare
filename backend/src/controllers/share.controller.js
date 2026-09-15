@@ -87,9 +87,10 @@ export const shareController = {
         });
       }
 
-      const protocol = req.protocol;
+      const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : (config.nodeEnv === 'production' ? 'https' : req.protocol));
       const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
+      const scheme = host.includes('localhost') ? protocol : 'https';
+      const baseUrl = `${scheme}://${host}`;
 
       const filesWithUrls = result.files.map(f => ({
         id: f.id,

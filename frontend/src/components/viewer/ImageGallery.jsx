@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Eye, HardDrive } from 'lucide-react';
+import { Download, Eye } from 'lucide-react';
 
 export function ImageGallery({ files, onSelectImage }) {
   const formatFileSize = (bytes) => {
@@ -10,71 +10,83 @@ export function ImageGallery({ files, onSelectImage }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const getSecureUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') && !url.includes('localhost')) {
+      return url.replace('http://', 'https://');
+    }
+    return url;
+  };
+
   const handleSingleDownload = (e, file) => {
     e.preventDefault();
     e.stopPropagation();
-    const downloadUrl = `${file.downloadUrl}?download=true`;
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = downloadUrl;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
-    }, 6000);
+    const targetUrl = getSecureUrl(file.downloadUrl);
+    const downloadUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}download=true`;
+    
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.download = file.name || 'image.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
-      {files.map((file) => (
-        <div
-          key={file.id}
-          className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-2xl transition-all duration-300 border border-slate-200/80 dark:border-slate-800/80 flex flex-col"
-        >
-          {/* Image Thumbnail Container */}
+      {files.map((file) => {
+        const secureImgUrl = getSecureUrl(file.downloadUrl);
+        return (
           <div
-            onClick={() => onSelectImage(file)}
-            className="relative aspect-video w-full overflow-hidden bg-slate-900 cursor-pointer"
+            key={file.id}
+            className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-2xl transition-all duration-300 border border-slate-200/80 dark:border-slate-800/80 flex flex-col"
           >
-            <img
-              src={file.downloadUrl}
-              alt={file.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
-            />
-
-            {/* Hover overlay with zoom icon */}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white">
-                <Eye className="w-6 h-6" />
-              </span>
-            </div>
-          </div>
-
-          {/* Details & Individual Download CTA */}
-          <div className="p-3.5 flex items-center justify-between gap-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
-            <div className="min-w-0 text-left">
-              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
-                {file.name}
-              </p>
-              <p className="text-[10px] text-slate-400 font-mono">
-                {formatFileSize(file.size)}
-              </p>
-            </div>
-
-            <button
-              onClick={(e) => handleSingleDownload(e, file)}
-              type="button"
-              className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500 text-brand-600 dark:text-brand-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-              title="Download image to local device"
+            {/* Image Thumbnail Container */}
+            <div
+              onClick={() => onSelectImage({ ...file, downloadUrl: secureImgUrl })}
+              className="relative aspect-video w-full overflow-hidden bg-slate-900 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download</span>
-            </button>
+              <img
+                src={secureImgUrl}
+                alt={file.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+
+              {/* Hover overlay with zoom icon */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white">
+                  <Eye className="w-6 h-6" />
+                </span>
+              </div>
+            </div>
+
+            {/* Details & Individual Download CTA */}
+            <div className="p-3.5 flex items-center justify-between gap-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+              <div className="min-w-0 text-left">
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {file.name}
+                </p>
+                <p className="text-[10px] text-slate-400 font-mono">
+                  {formatFileSize(file.size)}
+                </p>
+              </div>
+
+              <button
+                onClick={(e) => handleSingleDownload(e, file)}
+                type="button"
+                className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500 text-brand-600 dark:text-brand-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                title="Download image to local device"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download</span>
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
