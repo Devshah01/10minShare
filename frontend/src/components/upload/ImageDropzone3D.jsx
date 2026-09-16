@@ -220,10 +220,6 @@ export function ImageDropzone3D({
       cancelAnimationFrame(animFrameId.current);
       animFrameId.current = null;
     }
-
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch (_) {}
   };
 
   const handlePointerMove = (e) => {
@@ -264,10 +260,6 @@ export function ImageDropzone3D({
   const handlePointerUp = (e) => {
     if (!isDragging.current) return;
     isDragging.current = false;
-
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch (_) {}
 
     let projectedVirtual = virtualIndexRef.current + velocity.current * 5;
     let snapTarget = Math.round(projectedVirtual);
@@ -450,7 +442,14 @@ export function ImageDropzone3D({
             <div
               key={cardKey}
               ref={(el) => { cardRefs.current[cardKey] = el; }}
-              onClick={() => handleCardClick(card.index, card.type === 'add_card', cardKey)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (card.type === 'add_card' && !isFull) {
+                  fileInputRef.current?.click();
+                } else {
+                  handleCardClick(card.index, false, cardKey);
+                }
+              }}
               className={`group absolute w-[200px] sm:w-[270px] h-[200px] sm:h-[270px] rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900 border-2 border-zinc-200/90 dark:border-zinc-800/90 shadow-xl cursor-pointer overflow-hidden aspect-square transition-shadow duration-300`}
               style={{ willChange: 'transform, opacity, filter', backfaceVisibility: 'hidden' }}
             >
