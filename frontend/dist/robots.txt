@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Prevent indexing individual self-destructing share links
+Disallow: /share/
+
+Sitemap: https://10minshare.com/sitemap.xml
