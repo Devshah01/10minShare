@@ -187,10 +187,6 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
       cancelAnimationFrame(animFrameId.current);
       animFrameId.current = null;
     }
-
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch (_) {}
   };
 
   const handlePointerMove = (e) => {
@@ -231,10 +227,6 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
     if (!isDragging.current) return;
     isDragging.current = false;
 
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch (_) {}
-
     let projectedVirtual = virtualIndexRef.current + velocity.current * 5;
     let snapTarget = Math.round(projectedVirtual);
 
@@ -272,7 +264,8 @@ export function ImageViewer3D({ files = [], onSelectImage }) {
   };
 
   const handleCardClick = (cardIdx, file) => {
-    if (Math.abs(virtualIndexRef.current - dragStartVirtualIndex.current) > 0.15) {
+    const pointerTravelX = Math.abs((lastPointerX.current || dragStartX.current) - dragStartX.current);
+    if (pointerTravelX > 8) {
       return;
     }
 
