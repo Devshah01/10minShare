@@ -210,6 +210,7 @@ export function ImageDropzone3D({
     
     isDragging.current = true;
     dragStartX.current = e.clientX;
+    // Always snapshot the CURRENT virtualIndex so drag-distance check is accurate
     dragStartVirtualIndex.current = virtualIndexRef.current;
     lastPointerX.current = e.clientX;
     lastPointerTime.current = performance.now();
@@ -329,7 +330,12 @@ export function ImageDropzone3D({
   };
 
   const handleCardClick = (cardIdx, isAddCard, cardKey) => {
-    if (Math.abs(virtualIndexRef.current - dragStartVirtualIndex.current) > 0.15) {
+    // Use pointer X travel distance to distinguish a tap from a drag swipe.
+    // dragStartX is always set on pointerDown, so this works reliably on
+    // both mouse (laptop/desktop) and touch (mobile/tablet).
+    const pointerTravelX = Math.abs((lastPointerX.current || dragStartX.current) - dragStartX.current);
+    if (pointerTravelX > 8) {
+      // User was dragging, not clicking — ignore
       return;
     }
 
