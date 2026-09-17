@@ -39,6 +39,10 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
     }
   };
 
+  const handleExpire = React.useCallback(() => {
+    setIsExpired(true);
+  }, []);
+
   const handleDownloadAllZip = async () => {
     if (!shareData || !shareData.files || shareData.files.length === 0) return;
     setIsZipping(true);
@@ -49,6 +53,9 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
 
       for (const file of shareData.files) {
         const response = await fetch(file.downloadUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file: ${file.name}`);
+        }
         const blob = await response.blob();
         folder.file(file.name, blob);
       }
@@ -123,7 +130,7 @@ export function ShareViewer({ shortCode, onBackToUpload }) {
         <div className="flex items-center gap-3">
           <CountdownTimer
             initialSeconds={shareData.remainingSeconds}
-            onExpire={() => setIsExpired(true)}
+            onExpire={handleExpire}
           />
 
           <button

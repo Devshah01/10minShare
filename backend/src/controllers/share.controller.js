@@ -2,6 +2,7 @@ import { shareService } from '../services/share.service.js';
 import { storageService } from '../services/storage.service.js';
 import { generateShortCode } from '../utils/codeGenerator.js';
 import { logger } from '../utils/logger.js';
+import { config } from '../config/env.config.js';
 import { Readable } from 'stream';
 
 export const shareController = {

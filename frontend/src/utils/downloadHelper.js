@@ -1,6 +1,6 @@
 export const getSecureUrl = (url) => {
   if (!url) return '';
-  if (url.startsWith('http://') && !url.includes('localhost')) {
+  if (url.startsWith('http://') && typeof window !== 'undefined' && window.location.protocol === 'https:') {
     return url.replace('http://', 'https://');
   }
   return url;

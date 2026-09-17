@@ -11,7 +11,8 @@ export const storageService = {
    * Upload a file buffer to Cloudflare R2
    */
   async uploadFile(fileKey, buffer, mimeType) {
-    if (!config.r2.accessKeyId || config.r2.accessKeyId.includes('mock')) {
+    const isMock = !config.r2.accessKeyId || (typeof config.r2.accessKeyId === 'string' && config.r2.accessKeyId.includes('mock'));
+    if (isMock) {
       logger.warn(`R2 Access Key missing. Using in-memory fallback for key: ${fileKey}`);
       memoryStorage.set(fileKey, { buffer, mimeType });
       return fileKey;
@@ -59,7 +60,8 @@ export const storageService = {
     // Clean memory storage
     fileKeys.forEach(key => memoryStorage.delete(key));
 
-    if (!config.r2.accessKeyId || config.r2.accessKeyId.includes('mock')) {
+    const isMock = !config.r2.accessKeyId || (typeof config.r2.accessKeyId === 'string' && config.r2.accessKeyId.includes('mock'));
+    if (isMock) {
       return;
     }
 

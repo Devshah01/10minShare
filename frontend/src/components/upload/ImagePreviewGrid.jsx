@@ -1,7 +1,25 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { X, Trash2, ArrowRight } from 'lucide-react';
 
-export function ImagePreviewGrid({ files, onRemoveFile, onClearAll, onSubmit, isUploading }) {
+export function ImagePreviewGrid({ files = [], onRemoveFile, onClearAll, onSubmit, isUploading }) {
+  const fileItems = useMemo(() => {
+    return files.map((file, idx) => ({
+      file,
+      url: URL.createObjectURL(file),
+      name: file.name,
+      size: file.size,
+      index: idx,
+    }));
+  }, [files]);
+
+  useEffect(() => {
+    return () => {
+      fileItems.forEach((item) => {
+        if (item.url) URL.revokeObjectURL(item.url);
+      });
+    };
+  }, [fileItems]);
+
   if (!files || files.length === 0) return null;
 
   const formatFileSize = (bytes) => {
@@ -38,18 +56,16 @@ export function ImagePreviewGrid({ files, onRemoveFile, onClearAll, onSubmit, is
 
       {/* Grid of Preview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-        {files.map((item, index) => {
-          const previewUrl = URL.createObjectURL(item);
+        {fileItems.map((item) => {
           return (
             <div
-              key={`${item.name}-${index}`}
+              key={`${item.name}-${item.index}`}
               className="group relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm"
             >
               <img
-                src={previewUrl}
+                src={item.url}
                 alt={item.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                onLoad={() => URL.revokeObjectURL(previewUrl)}
               />
 
               {/* Gradient Overlay */}
@@ -59,7 +75,7 @@ export function ImagePreviewGrid({ files, onRemoveFile, onClearAll, onSubmit, is
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemoveFile(index);
+                  onRemoveFile(item.index);
                 }}
                 type="button"
                 className="absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-900/90 hover:bg-black text-white flex items-center justify-center border border-zinc-700 focus:outline-none transition-transform"

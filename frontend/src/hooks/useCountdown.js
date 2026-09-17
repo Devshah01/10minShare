@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function useCountdown(initialSeconds = 600, onExpire = null) {
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+  const onExpireRef = useRef(onExpire);
+
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
   useEffect(() => {
     setSecondsLeft(initialSeconds);
@@ -9,7 +14,7 @@ export function useCountdown(initialSeconds = 600, onExpire = null) {
 
   useEffect(() => {
     if (secondsLeft <= 0) {
-      if (onExpire) onExpire();
+      if (onExpireRef.current) onExpireRef.current();
       return;
     }
 
@@ -17,7 +22,7 @@ export function useCountdown(initialSeconds = 600, onExpire = null) {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          if (onExpire) onExpire();
+          if (onExpireRef.current) onExpireRef.current();
           return 0;
         }
         return prev - 1;
@@ -25,7 +30,7 @@ export function useCountdown(initialSeconds = 600, onExpire = null) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [secondsLeft, onExpire]);
+  }, []);
 
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
