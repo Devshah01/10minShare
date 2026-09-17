@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { UploadCloud, Plus, X, ChevronLeft, ChevronRight, Image as ImageIcon, Eye } from 'lucide-react';
 import { LightboxModal } from '../viewer/LightboxModal';
 
@@ -118,22 +118,27 @@ export function ImageDropzone3D({
     });
   }, [allCards, totalCards]);
 
-  // Sync virtualIndex and update DOM whenever cards count changes
-  useEffect(() => {
-    if (totalCards <= 1) {
-      setActiveIndex(0);
-      virtualIndexRef.current = 0;
-      targetIndexRef.current = 0;
-      velocity.current = 0;
-    } else if (activeIndex >= totalCards) {
-      const newIdx = Math.max(0, totalCards - 1);
-      setActiveIndex(newIdx);
-      virtualIndexRef.current = newIdx;
-      targetIndexRef.current = newIdx;
-      velocity.current = 0;
+  // Sync virtualIndex and update DOM synchronously before paint whenever card count changes
+  useLayoutEffect(() => {
+    if (animFrameId.current) {
+      cancelAnimationFrame(animFrameId.current);
+      animFrameId.current = null;
     }
-    apply3DTransforms(virtualIndexRef.current);
-  }, [totalCards, activeIndex, apply3DTransforms]);
+
+    let targetIdx = activeIndex;
+    if (totalCards <= 1) {
+      targetIdx = 0;
+    } else if (activeIndex >= totalCards) {
+      targetIdx = Math.max(0, totalCards - 1);
+    }
+
+    setActiveIndex(targetIdx);
+    virtualIndexRef.current = targetIdx;
+    targetIndexRef.current = targetIdx;
+    velocity.current = 0;
+
+    apply3DTransforms(targetIdx);
+  }, [totalCards, files.length, apply3DTransforms]);
 
   // Frame-Rate Independent Physics Loop (60Hz / 90Hz / 120Hz / 144Hz Smoothness)
   const updatePhysics = useCallback(() => {
