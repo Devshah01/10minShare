@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { UploadCloud, Plus, X, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { UploadCloud, Plus, X, ChevronLeft, ChevronRight, Image as ImageIcon, Eye } from 'lucide-react';
+import { LightboxModal } from '../viewer/LightboxModal';
 
 export function ImageDropzone3D({ 
   onFilesSelected, 
@@ -11,6 +12,7 @@ export function ImageDropzone3D({
   maxCount = 10 
 }) {
   const fileInputRef = useRef(null);
+  const [previewFile, setPreviewFile] = useState(null);
   
   // activeIndex tracks the current integer target card
   const [activeIndex, setActiveIndex] = useState(0);
@@ -118,10 +120,17 @@ export function ImageDropzone3D({
 
   // Sync virtualIndex and update DOM whenever cards count changes
   useEffect(() => {
-    if (activeIndex >= totalCards) {
+    if (totalCards <= 1) {
+      setActiveIndex(0);
+      virtualIndexRef.current = 0;
+      targetIndexRef.current = 0;
+      velocity.current = 0;
+    } else if (activeIndex >= totalCards) {
       const newIdx = Math.max(0, totalCards - 1);
       setActiveIndex(newIdx);
       virtualIndexRef.current = newIdx;
+      targetIndexRef.current = newIdx;
+      velocity.current = 0;
     }
     apply3DTransforms(virtualIndexRef.current);
   }, [totalCards, activeIndex, apply3DTransforms]);
@@ -321,7 +330,7 @@ export function ImageDropzone3D({
     }
   };
 
-  const handleCardClick = (cardIdx, isAddCard, cardKey) => {
+  const handleCardClick = (cardIdx, isAddCard, card) => {
     // Use pointer X travel distance to distinguish a tap from a drag swipe.
     // dragStartX is always set on pointerDown, so this works reliably on
     // both mouse (laptop/desktop) and touch (mobile/tablet).
@@ -341,6 +350,8 @@ export function ImageDropzone3D({
     if (Math.abs(delta) < 0.3) {
       if (isAddCard && !isFull) {
         fileInputRef.current?.click();
+      } else if (!isAddCard && card && card.url) {
+        setPreviewFile({ name: card.name, url: card.url, downloadUrl: card.url });
       }
     } else {
       animateToCard(cardIdx);
@@ -382,23 +393,46 @@ export function ImageDropzone3D({
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
 
-        {/* Delete Badge Overlay */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemoveFile(card.index);
-            if (activeIndex >= files.length - 1 && activeIndex > 0) {
-              animateToCard(activeIndex - 1);
-            }
-          }}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-lg active:scale-95 hover:scale-105"
-          title="Remove image"
-        >
-          <X className="w-4 h-4 stroke-[2.5]" />
-        </button>
+        {/* Hover overlay with eye icon */}
+        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
+          <span className="p-2.5 rounded-full bg-white/25 backdrop-blur-md text-white shadow-lg flex items-center gap-1.5 font-bold text-xs">
+            <Eye className="w-4 h-4 stroke-[2.5]" />
+            <span>Click to Preview</span>
+          </span>
+        </div>
+
+        {/* Top Control Bar: Eye (Preview) & X (Delete) */}
+        <div className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-4 z-30 flex items-center justify-between pointer-events-none">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewFile({ name: card.name, url: card.url, downloadUrl: card.url });
+            }}
+            type="button"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-lg active:scale-95 hover:scale-105 pointer-events-auto cursor-pointer"
+            title="Preview image"
+          >
+            <Eye className="w-4 h-4 stroke-[2.5]" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFile(card.index);
+              const remaining = files.length - 1;
+              const nextIdx = Math.max(0, Math.min(activeIndex, remaining - 1));
+              animateToCard(nextIdx);
+            }}
+            type="button"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-lg active:scale-95 hover:scale-105 pointer-events-auto cursor-pointer"
+            title="Remove image"
+          >
+            <X className="w-4 h-4 stroke-[2.5]" />
+          </button>
+        </div>
 
         {/* Bottom Info Badge Overlay */}
-        <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-30 max-w-[85%] flex items-center justify-start">
+        <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-30 max-w-[85%] flex items-center justify-start pointer-events-none">
           <div className="px-3.5 py-1.5 rounded-full bg-black/60 dark:bg-black/70 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-bold text-white shadow-lg truncate flex items-center gap-1.5">
             <ImageIcon className="w-3.5 h-3.5 shrink-0 text-white/80" />
             <span className="truncate">{card.name}</span>
@@ -447,7 +481,7 @@ export function ImageDropzone3D({
                 if (card.type === 'add_card' && !isFull) {
                   fileInputRef.current?.click();
                 } else {
-                  handleCardClick(card.index, false, cardKey);
+                  handleCardClick(card.index, card.type === 'add_card', card);
                 }
               }}
               className={`group absolute w-[200px] sm:w-[270px] h-[200px] sm:h-[270px] rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900 border-2 border-zinc-200/90 dark:border-zinc-800/90 shadow-xl cursor-pointer overflow-hidden aspect-square transition-shadow duration-300`}
@@ -546,6 +580,11 @@ export function ImageDropzone3D({
             </>
           )}
         </button>
+      )}
+
+      {/* Full-screen Lightbox Preview Modal for draft uploaded images */}
+      {previewFile && (
+        <LightboxModal file={previewFile} onClose={() => setPreviewFile(null)} />
       )}
     </div>
   );
