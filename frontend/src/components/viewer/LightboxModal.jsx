@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Download, Image as ImageIcon } from 'lucide-react';
 import { getSecureUrl, downloadSingleFile } from '../../utils/downloadHelper';
 
@@ -20,15 +21,15 @@ export function LightboxModal({ file, onClose }) {
   const rawUrl = file.downloadUrl || file.url || file.src;
   const secureImgUrl = getSecureUrl(rawUrl) || rawUrl;
 
-  return (
+  const modalContent = (
     <div 
       onClick={onClose}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-black/95 backdrop-blur-md p-3 sm:p-6 animate-fade-in select-none"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-black/95 backdrop-blur-md p-3 sm:p-6 animate-fade-in select-none"
     >
       {/* Top Bar Controls */}
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="w-full flex items-center justify-between text-white z-20 pb-2 border-b border-white/10 shrink-0"
+        className="w-full flex items-center justify-between text-white z-[10000] pb-2 border-b border-white/10 shrink-0"
       >
         <div className="flex items-center gap-2 max-w-[70%] sm:max-w-[80%]">
           <div className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-bold text-white shadow-lg truncate flex items-center gap-2">
@@ -70,4 +71,6 @@ export function LightboxModal({ file, onClose }) {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
