@@ -92,6 +92,16 @@ export const shareService = {
           [share.id]
         );
         files = filesRes.rows;
+      } else if (inMemoryShares.has(shortCode)) {
+        const item = inMemoryShares.get(shortCode);
+        share = {
+          id: item.id,
+          short_code: item.short_code,
+          created_at: item.created_at,
+          expires_at: item.expires_at,
+          is_expired: item.is_expired,
+        };
+        files = item.files;
       }
     } catch (err) {
       if (inMemoryShares.has(shortCode)) {

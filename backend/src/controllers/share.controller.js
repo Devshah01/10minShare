@@ -1,5 +1,6 @@
 import { shareService } from '../services/share.service.js';
 import { storageService } from '../services/storage.service.js';
+import { pool } from '../config/db.config.js';
 import { generateShortCode } from '../utils/codeGenerator.js';
 import { logger } from '../utils/logger.js';
 import { config } from '../config/env.config.js';
@@ -186,12 +187,21 @@ export const shareController = {
   },
 
   /**
-   * Health check endpoint
+   * Health check endpoint (keeps both server & DB connection warm)
    */
-  getHealth(req, res) {
+  async getHealth(req, res) {
+    let dbStatus = 'disconnected';
+    try {
+      await pool.query('SELECT 1');
+      dbStatus = 'connected';
+    } catch (err) {
+      dbStatus = `unhealthy: ${err.message}`;
+    }
+
     res.json({
       status: 'UP',
       service: '10minshare-api',
+      database: dbStatus,
       timestamp: new Date().toISOString(),
     });
   },

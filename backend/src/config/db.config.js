@@ -9,8 +9,10 @@ export const pool = new Pool({
   connectionString: config.databaseUrl,
   ssl: config.databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false },
   max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 300000, // Keep idle connection for 5 mins
+  connectionTimeoutMillis: 15000, // 15s allowance for serverless/sleeping DB wakeups
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 });
 
 pool.on('error', (err) => {
