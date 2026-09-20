@@ -5,8 +5,11 @@ import { uploadRateLimiter } from '../middleware/rateLimiter.middleware.js';
 
 const router = express.Router();
 
-// Health Check
+// Health Check (Lightweight keep-alive, no DB query)
 router.get('/health', shareController.getHealth);
+
+// Optional DB Diagnostic Health Check (Manual testing only)
+router.get('/health/db', shareController.getDatabaseHealth);
 
 // Upload images & create 10-minute share session
 router.post('/shares', uploadRateLimiter, uploadMiddleware, shareController.createShare);

@@ -5,6 +5,9 @@ import { storageService } from './storage.service.js';
 // In-memory DB fallback if PostgreSQL is not connected yet
 const inMemoryShares = new Map();
 
+// Track whether active or pending database shares exist to prevent querying sleeping DB
+let pendingDbShares = false;
+
 export const shareService = {
   /**
    * Create a new share record with file references
@@ -37,6 +40,7 @@ export const shareService = {
         }
 
         await client.query('COMMIT');
+        pendingDbShares = true;
         return { ...share, files: fileRecords };
       } catch (err) {
         await client.query('ROLLBACK');
@@ -151,6 +155,10 @@ export const shareService = {
     try {
       if (shareId && !String(shareId).startsWith('mem-')) {
         await pool.query('DELETE FROM shares WHERE id = $1', [shareId]);
+        const countRes = await pool.query('SELECT COUNT(*) FROM shares');
+        if (parseInt(countRes.rows[0]?.count || '0', 10) === 0) {
+          pendingDbShares = false;
+        }
       }
     } catch (err) {
       logger.error('Failed to delete share record from DB:', err.message);
@@ -173,6 +181,11 @@ export const shareService = {
       }
     }
 
+    // Skip DB query if no pending database shares exist (allows serverless DB to sleep)
+    if (!pendingDbShares) {
+      return;
+    }
+
     // Clean database store
     try {
       const expiredRes = await pool.query(
@@ -189,8 +202,16 @@ export const shareService = {
         await storageService.deleteFiles(fileKeys);
         await pool.query('DELETE FROM shares WHERE id = $1', [row.id]);
       }
+
+      // Check if any shares still remain in the database
+      const countRes = await pool.query('SELECT COUNT(*) FROM shares');
+      const remainingCount = parseInt(countRes.rows[0]?.count || '0', 10);
+      if (remainingCount === 0) {
+        pendingDbShares = false;
+        logger.info('All shares purged. Database cleanup entering idle sleep mode.');
+      }
     } catch (err) {
-      // Quiet warning if DB is unconfigured
+      // Quiet warning if DB is unconfigured or asleep
     }
   },
 };

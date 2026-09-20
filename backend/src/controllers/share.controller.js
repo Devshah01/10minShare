@@ -187,22 +187,35 @@ export const shareController = {
   },
 
   /**
-   * Health check endpoint (keeps both server & DB connection warm)
+   * Health check endpoint (lightweight liveness probe for Cloud Run / uptime monitors)
+   * Does NOT query PostgreSQL so serverless databases (Layerbase) can sleep.
    */
-  async getHealth(req, res) {
-    let dbStatus = 'disconnected';
-    try {
-      await pool.query('SELECT 1');
-      dbStatus = 'connected';
-    } catch (err) {
-      dbStatus = `unhealthy: ${err.message}`;
-    }
-
+  getHealth(req, res) {
     res.json({
       status: 'UP',
       service: '10minshare-api',
-      database: dbStatus,
       timestamp: new Date().toISOString(),
     });
+  },
+
+  /**
+   * Deep health check endpoint (manual diagnostic to verify DB connectivity)
+   */
+  async getDatabaseHealth(req, res) {
+    try {
+      await pool.query('SELECT 1');
+      return res.json({
+        status: 'UP',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      return res.status(503).json({
+        status: 'DOWN',
+        database: 'disconnected',
+        error: err.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
   },
 };
