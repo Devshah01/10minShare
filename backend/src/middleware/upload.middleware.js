@@ -21,3 +21,12 @@ export const uploadMiddleware = multer({
   },
   fileFilter,
 }).array('images', config.maxImagesPerShare);
+
+export const uploadSingleMiddleware = multer({
+  storage,
+  limits: {
+    fileSize: config.maxFileSizeMB * 1024 * 1024, // 10MB per file
+    files: 1,
+  },
+  fileFilter,
+}).single('image');

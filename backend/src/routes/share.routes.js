@@ -1,7 +1,7 @@
 import express from 'express';
 import { shareController } from '../controllers/share.controller.js';
-import { uploadMiddleware } from '../middleware/upload.middleware.js';
-import { uploadRateLimiter } from '../middleware/rateLimiter.middleware.js';
+import { uploadMiddleware, uploadSingleMiddleware } from '../middleware/upload.middleware.js';
+import { uploadRateLimiter, apiRateLimiter } from '../middleware/rateLimiter.middleware.js';
 
 const router = express.Router();
 
@@ -11,7 +11,12 @@ router.get('/health', shareController.getHealth);
 // Optional DB Diagnostic Health Check (Manual testing only)
 router.get('/health/db', shareController.getDatabaseHealth);
 
-// Upload images & create 10-minute share session
+// Parallel upload session endpoints (3-stream worker pool)
+router.post('/shares/init', uploadRateLimiter, shareController.initShare);
+router.post('/shares/:shortCode/files', apiRateLimiter, uploadSingleMiddleware, shareController.uploadShareFile);
+router.post('/shares/:shortCode/complete', apiRateLimiter, shareController.completeShare);
+
+// Legacy upload images & create 10-minute share session
 router.post('/shares', uploadRateLimiter, uploadMiddleware, shareController.createShare);
 
 // Fetch share metadata by short code

@@ -8,7 +8,98 @@ import { Readable } from 'stream';
 
 export const shareController = {
   /**
-   * Upload up to 10 images and generate a 10-minute share link
+   * Initialize a new parallel share session
+   */
+  async initShare(req, res, next) {
+    try {
+      const shortCode = generateShortCode(8);
+      logger.info(`Initializing parallel upload session [${shortCode}]`);
+      const session = await shareService.initShare(shortCode);
+      return res.status(201).json({
+        success: true,
+        data: {
+          shortCode: session.short_code,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * Upload an individual image file to an active share session
+   */
+  async uploadShareFile(req, res, next) {
+    try {
+      const { shortCode } = req.params;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No image file provided.',
+        });
+      }
+
+      const fileExtension = file.originalname.split('.').pop() || 'png';
+      const randomSuffix = Math.random().toString(36).substring(2, 7);
+      const fileKey = `shares/${shortCode}/${Date.now()}-${randomSuffix}.${fileExtension}`;
+
+      await storageService.uploadFile(fileKey, file.buffer, file.mimetype);
+
+      const fileRecord = await shareService.addFileToShare(shortCode, {
+        fileKey,
+        originalName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          fileId: fileRecord.id,
+          originalName: fileRecord.original_name,
+          fileSize: fileRecord.file_size,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * Complete parallel upload session and activate 10-minute timer
+   */
+  async completeShare(req, res, next) {
+    try {
+      const { shortCode } = req.params;
+      const completed = await shareService.completeShare(shortCode);
+
+      if (!completed.total_images || completed.total_images === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please upload at least 1 image before completing share.',
+        });
+      }
+
+      logger.info(`Completed parallel share [${shortCode}] with ${completed.total_images} images`);
+
+      return res.json({
+        success: true,
+        data: {
+          shortCode: completed.short_code,
+          expiresAt: completed.expires_at,
+          remainingSeconds: 600,
+          totalImages: completed.total_images,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * Upload up to 10 images and generate a 10-minute share link (Legacy single-request endpoint)
    */
   async createShare(req, res, next) {
     try {
@@ -30,21 +121,20 @@ export const shareController = {
       const shortCode = generateShortCode(8);
       logger.info(`Creating new 10-minute share [${shortCode}] with ${files.length} images`);
 
-      const uploadedFiles = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileExtension = file.originalname.split('.').pop() || 'png';
-        const fileKey = `shares/${shortCode}/${Date.now()}-${i}.${fileExtension}`;
-
-        await storageService.uploadFile(fileKey, file.buffer, file.mimetype);
-
-        uploadedFiles.push({
-          fileKey,
-          originalName: file.originalname,
-          fileSize: file.size,
-          mimeType: file.mimetype,
-        });
-      }
+      // Parallel uploads to storage
+      const uploadedFiles = await Promise.all(
+        files.map(async (file, i) => {
+          const fileExtension = file.originalname.split('.').pop() || 'png';
+          const fileKey = `shares/${shortCode}/${Date.now()}-${i}.${fileExtension}`;
+          await storageService.uploadFile(fileKey, file.buffer, file.mimetype);
+          return {
+            fileKey,
+            originalName: file.originalname,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+          };
+        })
+      );
 
       const shareRecord = await shareService.createShare(shortCode, uploadedFiles);
 

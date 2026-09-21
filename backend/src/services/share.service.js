@@ -75,6 +75,121 @@ export const shareService = {
   },
 
   /**
+   * Initialize a new share session for parallel uploads
+   */
+  async initShare(shortCode) {
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min buffer during upload
+
+    try {
+      const res = await pool.query(
+        `INSERT INTO shares (short_code, expires_at)
+         VALUES ($1, $2)
+         RETURNING id, short_code, created_at, expires_at`,
+        [shortCode, expiresAt]
+      );
+      pendingDbShares = true;
+      return res.rows[0];
+    } catch (dbErr) {
+      logger.warn('Database error or unconfigured DB connection. Using in-memory store fallback for initShare:', dbErr.message);
+      const shareData = {
+        id: `mem-${Date.now()}`,
+        short_code: shortCode,
+        created_at: new Date(),
+        expires_at: expiresAt,
+        is_expired: false,
+        files: [],
+      };
+      inMemoryShares.set(shortCode, shareData);
+      return shareData;
+    }
+  },
+
+  /**
+   * Add a single uploaded file record to an existing share session
+   */
+  async addFileToShare(shortCode, file) {
+    try {
+      const shareRes = await pool.query(
+        `SELECT id FROM shares WHERE short_code = $1 AND is_expired = FALSE`,
+        [shortCode]
+      );
+
+      if (shareRes.rows.length > 0) {
+        const shareId = shareRes.rows[0].id;
+        const fileRes = await pool.query(
+          `INSERT INTO share_files (share_id, file_key, original_name, file_size, mime_type)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id, file_key, original_name, file_size, mime_type`,
+          [shareId, file.fileKey, file.originalName, file.fileSize, file.mimeType]
+        );
+        return fileRes.rows[0];
+      }
+    } catch (dbErr) {
+      // Fall through to in-memory check
+    }
+
+    if (inMemoryShares.has(shortCode)) {
+      const item = inMemoryShares.get(shortCode);
+      const fileRecord = {
+        id: `file-${Date.now()}-${item.files.length}`,
+        file_key: file.fileKey,
+        original_name: file.originalName,
+        file_size: file.fileSize,
+        mime_type: file.mimeType,
+      };
+      item.files.push(fileRecord);
+      return fileRecord;
+    }
+
+    throw new Error('Share session not found or expired.');
+  },
+
+  /**
+   * Finalize share session and start the strict 10-minute timer
+   */
+  async completeShare(shortCode) {
+    const finalExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    try {
+      const updateRes = await pool.query(
+        `UPDATE shares
+         SET expires_at = $1
+         WHERE short_code = $2 AND is_expired = FALSE
+         RETURNING id, short_code, created_at, expires_at`,
+        [finalExpiresAt, shortCode]
+      );
+
+      if (updateRes.rows.length > 0) {
+        const share = updateRes.rows[0];
+        const countRes = await pool.query(
+          `SELECT COUNT(*) FROM share_files WHERE share_id = $1`,
+          [share.id]
+        );
+        const totalImages = parseInt(countRes.rows[0]?.count || '0', 10);
+        return {
+          short_code: share.short_code,
+          expires_at: share.expires_at,
+          total_images: totalImages,
+        };
+      }
+    } catch (dbErr) {
+      // Fall through to in-memory check
+    }
+
+    if (inMemoryShares.has(shortCode)) {
+      const item = inMemoryShares.get(shortCode);
+      item.expires_at = finalExpiresAt;
+      return {
+        short_code: item.short_code,
+        expires_at: item.expires_at,
+        total_images: item.files.length,
+      };
+    }
+
+    throw new Error('Share session not found or expired.');
+  },
+
+  /**
    * Fetch share metadata and files by shortCode
    */
   async getShareByCode(shortCode) {
