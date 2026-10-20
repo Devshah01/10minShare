@@ -1,4 +1,4 @@
-import { shareService } from '../services/share.service.js';
+﻿import { shareService } from '../services/share.service.js';
 import { storageService } from '../services/storage.service.js';
 import { pool } from '../config/db.config.js';
 import { generateShortCode } from '../utils/codeGenerator.js';
@@ -224,9 +224,25 @@ export const shareController = {
         return res.status(404).send('File not found.');
       }
 
-      const fileData = await storageService.getFile(targetFile.file_key);
-
       const isDownload = req.query.download === 'true' || req.query.disposition === 'attachment';
+      const remainingSeconds = Math.max(result.remainingSeconds || 600, 60);
+
+      // Generate direct presigned Cloudflare R2 URL (Zero Cloud Run egress cost!)
+      const directUrl = await storageService.getSignedDownloadUrl(
+        targetFile.file_key,
+        targetFile.original_name,
+        targetFile.mime_type,
+        isDownload,
+        remainingSeconds
+      );
+
+      if (directUrl) {
+        // Redirect browser to download directly from Cloudflare R2
+        return res.redirect(302, directUrl);
+      }
+
+      // Fallback for local dev memory storage
+      const fileData = await storageService.getFile(targetFile.file_key);
       const contentType = isDownload ? 'application/octet-stream' : (fileData.contentType || targetFile.mime_type);
       const dispositionType = isDownload ? 'attachment' : 'inline';
 
@@ -243,7 +259,6 @@ export const shareController = {
       } else if (fileData.body && typeof fileData.body.pipe === 'function') {
         return fileData.body.pipe(res);
       } else {
-        // Fallback for AWS SDK v3 Web Stream
         const byteArray = await fileData.body.transformToByteArray();
         return res.send(Buffer.from(byteArray));
       }

@@ -1,4 +1,5 @@
-import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+﻿import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client } from '../config/r2.config.js';
 import { config } from '../config/env.config.js';
 import { logger } from '../utils/logger.js';
@@ -7,6 +8,30 @@ import { logger } from '../utils/logger.js';
 const memoryStorage = new Map();
 
 export const storageService = {
+  /**
+   * Generate temporary presigned download URL directly from Cloudflare R2 (100% Free Bandwidth)
+   */
+  async getSignedDownloadUrl(fileKey, originalName, mimeType, isDownload = false, expiresIn = 600) {
+    const isMock = !config.r2.accessKeyId || (typeof config.r2.accessKeyId === 'string' && config.r2.accessKeyId.includes('mock'));
+    if (isMock) {
+      return null;
+    }
+
+    try {
+      const command = new GetObjectCommand({
+        Bucket: config.r2.bucketName,
+        Key: fileKey,
+        ResponseContentDisposition: `${isDownload ? 'attachment' : 'inline'}; filename="${encodeURIComponent(originalName)}"`,
+        ResponseContentType: mimeType || undefined,
+      });
+
+      return await getSignedUrl(s3Client, command, { expiresIn: Math.min(expiresIn, 3600) });
+    } catch (err) {
+      logger.error('Failed to generate presigned download URL from R2:', err);
+      return null;
+    }
+  },
+
   /**
    * Upload a file buffer to Cloudflare R2
    */
