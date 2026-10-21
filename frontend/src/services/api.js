@@ -1,4 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+let rawBaseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://share-api-678838121322.asia-south1.run.app/api' : '/api');
+if (rawBaseUrl && rawBaseUrl.includes('europe-west1.run.app')) {
+  rawBaseUrl = rawBaseUrl.replace('europe-west1.run.app', 'asia-south1.run.app');
+}
+const API_BASE_URL = rawBaseUrl;
 
 export const api = {
   /**
